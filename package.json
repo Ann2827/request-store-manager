@@ -1,0 +1,70 @@
+{
+  "name": "request-store-manager",
+  "version": "1.0.0",
+  "description": "Allows you to write less boilerplate code when making API requests.",
+  "author": "Ann Bystrova <ann.bystrova96@mail.ru>",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ann2827/request-store-manager.git"
+  },
+  "homepage": "https://github.com/Ann2827/request-store-manager#readme",
+  "bugs": {
+    "url": "https://github.com/Ann2827/request-store-manager/issues"
+  },
+  "keywords": [
+    "http",
+    "request",
+    "manager",
+    "store",
+    "js",
+    "react"
+  ],
+  "type": "module",
+  "module": "dist/index.modern.js",
+  "source": "src/index.ts",
+  "types": "dist/index.d.ts",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "rimraf dist && rollup -c",
+    "test": "run-s test:lint test:unit",
+    "test:lint": "eslint './src/**/*.ts'",
+    "test:unit": "jest",
+    "plop": "plop --plopfile ./.plop/plop.config.cjs",
+    "release": "semantic-release",
+    "lint": "eslint --fix './src/**/*.ts'"
+  },
+  "files": [
+    "dist"
+  ],
+  "devDependencies": {
+    "@babel/plugin-transform-private-property-in-object": "^7.25.9",
+    "@babel/plugin-transform-runtime": "^7.25.9",
+    "@babel/preset-env": "^7.26.0",
+    "@babel/preset-typescript": "^7.26.0",
+    "@eslint/compat": "^1.2.5",
+    "@eslint/eslintrc": "^3.2.0",
+    "@eslint/js": "^9.18.0",
+    "@typescript-eslint/eslint-plugin": "^8.18.2",
+    "@typescript-eslint/parser": "^8.18.2",
+    "eslint": "^9.18.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^18.0.0",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-jest": "^28.11.0",
+    "eslint-plugin-prettier": "^5.2.3",
+    "eslint-plugin-unicorn": "^56.0.1",
+    "globals": "^15.14.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "jiti": "^2.4.2",
+    "plop": "^4.0.1",
+    "prettier": "^3.4.2",
+    "rollup": "^4.32.0",
+    "semantic-release": "^24.2.1",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.21.0",
+    "yarn-run-all": "^3.1.1"
+  }
+}

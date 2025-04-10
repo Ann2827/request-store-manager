@@ -1,0 +1,47 @@
+import { Context, Logger, type NamedLogger } from '@core';
+
+import type { IModule } from '@types';
+
+export type T{{ properCase name }}Base = Record<string, unknown>;
+
+type T{{ properCase name }}Config<T extends T{{ properCase name }}Base> = {};
+type T{{ properCase name }}Modules = {};
+type T{{ properCase name }}Settings = {};
+
+export const MODULE_NAME = '{{ camelCase name }}';
+
+/**
+ * Модуль для работы с {{ properCase name }}
+ */
+class {{ properCase name }}<T extends T{{ properCase name }}Base = T{{ properCase name }}Base> extends Context<T> implements IModule {
+  readonly #config: T{{ properCase name }}Config<T>;
+
+  readonly #modules: T{{ properCase name }}Modules;
+
+  readonly #settings: T{{ properCase name }}Settings;
+
+  readonly #namedLogger?: NamedLogger;
+
+  constructor(
+    config: Partial<T{{ properCase name }}Config<T>>,
+    modules: T{{ properCase name }}Modules,
+    settings?: Partial<T{{ properCase name }}Settings>,
+    logger?: Logger,
+  ) {
+    const namedLogger = logger?.named(MODULE_NAME);
+    super({}, namedLogger);
+
+    this.#config = { ...config };
+    this.#modules = { ...modules };
+    this.#settings = { ...settings };
+    this.#namedLogger = namedLogger;
+  }
+
+  public restart() {
+    super.restart();
+    Object.values(this.#modules).forEach((module) => module.restart());
+  }
+}
+
+export default {{ properCase name }};
+
