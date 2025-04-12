@@ -80,6 +80,9 @@ class RequestManager<
       needs: needsModule,
       notifications: notificationsModule,
     };
+
+    this.connectLoader = this.connectLoader.bind(this);
+    this.connectNotifications = this.connectNotifications.bind(this);
   }
 
   public restart(): void {
@@ -87,13 +90,12 @@ class RequestManager<
   }
 
   public connectLoader() {
-    const { subscribe, state } = this.#modules.loader;
-    return { subscribe, state };
+    // const { subscribe, state } = this.#modules.loader;
+    return this.#modules.loader;
   }
 
   public connectNotifications() {
-    const { subscribe, state } = this.#modules.notifications;
-    return { subscribe, state };
+    return this.#modules.notifications;
   }
 
   public setToken(...args: Parameters<Token<T>['setToken']>): void {
@@ -125,7 +127,8 @@ class RequestManager<
   }
 
   public subscribe() {
-    return this.#modules.needs.subscribe;
+    // FIXME: работает?
+    return this.#modules.needs.subscribe.bind(this);
   }
 
   public get<K extends keyof S = keyof S>(key: K): S[K] {

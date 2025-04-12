@@ -12,6 +12,7 @@ export type TTokenValue = string | null;
  * Example custom template: "x-auth:Bearer ${token}"
  * Header делиться на name и value по ":"
  */
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 export type TTokenTemplate = 'bearer' | string;
 
 export type TTokenSettings = {

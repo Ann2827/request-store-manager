@@ -1,4 +1,5 @@
 import { Logger, type NamedLogger, StorageFactory } from '@core';
+import { isString } from '@utils';
 
 import type { IModule, TCacheOptions, TCacheSettings, TStorage } from '@types';
 
@@ -78,7 +79,7 @@ class Cache implements IModule {
     const value: any = storage.getItem(this.#settings.prefix + key);
     let cache: string;
     try {
-      if (typeof value !== 'string') return;
+      if (!isString(value)) return;
       const objValue = JSON.parse(value);
       if (!IsCacheObj(objValue)) return;
       if (objValue.expires > 0 && objValue.expires < Date.now()) {

@@ -1,5 +1,3 @@
-import { isObject } from './guards';
-
 export const arrToStr = (arr?: string[] | string, splitter = ', '): string => {
   if (!arr) return '';
   if (typeof arr === 'string') return arr;
@@ -29,24 +27,6 @@ export const onlyPublic = <T extends Record<string, unknown>>(obj: T): TOnlyPubl
     if (typeof key === 'string' && key[0] === '_') delete updateObj[key];
   });
   return updateObj;
-};
-
-export const cleanObjKeys = <T extends object = object, D = Partial<T>>(reference: T, dirty: D): D => {
-  const result = {} as D;
-  if (Array.isArray(reference)) return dirty;
-  if (isObject(reference) && dirty && isObject(dirty)) {
-    // console.log('reference', reference);
-    (Object.keys(reference) as Array<keyof typeof reference>).forEach((key) => {
-      // @ts-ignore
-      if (!(key in dirty)) return;
-
-      const referenceValue = reference[key];
-      result[key as keyof D] = isObject(referenceValue)
-        ? cleanObjKeys(referenceValue, dirty[key as keyof D])
-        : dirty[key as keyof D];
-    });
-  }
-  return result;
 };
 
 export const fillFromArray = <K extends PropertyKey, V>(keys: K[], value: V): Record<K, V> =>
@@ -87,6 +67,6 @@ export const fillFromArrayFn5 = <T extends Record<PropertyKey, unknown>, V exten
 /**
  * Возвращает тело функции в виде строки
  */
-export function stringifyFunction(_: any, val: any) {
+export function stringifyFunction(_: any, val: any): any {
   return typeof val === 'function' ? `${val}`.replaceAll('\n', '').replaceAll('  ', '') : val;
 }

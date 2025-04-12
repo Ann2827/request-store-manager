@@ -1,4 +1,4 @@
-import { arrToStr, unflattenItem, unflatten, onlyPublic, cleanObjKeys, fillFromArray } from './object';
+import { arrToStr, unflattenItem, unflatten, onlyPublic, fillFromArray } from '../../src/utils/object';
 
 describe('utils object: fn:', () => {
   test('arrToStr should be passed', () => {
@@ -35,27 +35,6 @@ describe('utils object: fn:', () => {
     expect(Object.keys(data)).not.toContain('_privateKey');
     expect(Object.keys(data)).not.toContain('_privateFn');
     expect(Object.keys(data).sort()).toEqual(['publicKey', 'publicFn'].sort());
-  });
-
-  test('cleanObjKeys', () => {
-    const ref = {
-      key1: '',
-      key2: { key3: '' },
-      key4: 0,
-      key5: null,
-      key6: false,
-      key7: [],
-      key8: [''],
-      key9: [{ key10: '' }],
-    };
-    // @ts-ignore
-    const result = cleanObjKeys(ref, {
-      key1: '',
-      key2: { key1: '' },
-      key9: '',
-      key11: '',
-    });
-    expect(result).toEqual({ key1: '', key2: {}, key9: '' });
   });
 
   test('fillByArray', () => {

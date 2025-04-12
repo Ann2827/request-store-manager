@@ -1,4 +1,4 @@
-import { getDiff } from './diff';
+import { getDiff } from '../../src/utils/diff';
 
 describe('utils diff: fn:', () => {
   test('should be return simple diff', () => {

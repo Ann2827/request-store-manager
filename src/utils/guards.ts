@@ -1,4 +1,6 @@
-export const isObject = <T = Obj>(data: any): data is T =>
+import { Obj } from '@types';
+
+export const isObject = <T = Obj>(data: unknown): data is T =>
   typeof data === 'object' &&
   data !== null &&
   !Array.isArray(data) &&

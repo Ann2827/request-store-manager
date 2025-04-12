@@ -4,6 +4,7 @@ export type PartialRecursive<T> = {
 export type RequiredRecursive<T> = {
   [P in keyof T]-?: RequiredRecursive<T[P]>;
 };
+export type Obj = Record<PropertyKey, unknown>;
 
 export type TSetFn<S> = S | ((prev: S) => S);
 export type TSubscribeFn<S> = (next: S) => void;
@@ -47,6 +48,7 @@ export type ReverseMap<T extends Record<keyof T, PropertyKey>> = {
 export type Include<Key extends PropertyKey, List extends PropertyKey, Value = true> =
   Key extends Extract<List, Key> ? Value : never;
 
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 export type ObjectRule<Key extends PropertyKey | never, Value> = {
   [K in Key]: Value;
 };
@@ -70,6 +72,7 @@ export type KeysMatching<T, V> = { [K in keyof T]-?: T[K] extends V ? K : never 
  * https://github.com/millsp/ts-toolbelt/blob/master/sources/Object/Invert.ts
  */
 type IntersectOf<U> = (U extends unknown ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 type ComputeRaw<A> = A extends () => void ? A : { [K in keyof A]: A[K] } & unknown;
 export type Invert<O extends Record<keyof O, Value>, Value extends PropertyKey = PropertyKey> = O extends unknown
   ? ComputeRaw<
@@ -132,7 +135,7 @@ export type Select<O extends object, M, Match extends MatchBase = 'default'> = P
 /**
  * https://github.com/millsp/ts-toolbelt/blob/master/sources/List/Undefinable.ts
  */
-// eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
+
 // const _ = Symbol('x');
 // type X = typeof _ & {};
 // type Cast<A1, A2> = A1 extends A2 ? A1 : A2;

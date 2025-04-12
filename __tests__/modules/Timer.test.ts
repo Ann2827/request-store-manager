@@ -1,4 +1,4 @@
-import { Timer } from '../src/modules';
+import Timer from '../../src/modules/Timer';
 
 describe('Timer class:', () => {
   let timerModule: Timer;

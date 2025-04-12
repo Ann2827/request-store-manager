@@ -3,7 +3,6 @@ import { fillFromArrayFn5 } from '@utils';
 
 import type {
   IManagerConfig,
-  NoDefaultIndex,
   RequestManagerBase,
   TCacheOptions,
   TManagerStore,
@@ -26,29 +25,8 @@ type TGetRequestSuccessByStoreKey<
 > = { [K in keyof RM]-?: Key extends RM[K]['storeKey'] ? RM[K]['success'] : never }[keyof RM];
 
 type TStoreTemplate<T extends TTokenNames, S extends TStoreBase, RM extends RequestManagerBase<T, S>> = {
-  [K in keyof S]: TManagerStore<K, S, TGetRequestSuccessByStoreKey<T, S, RM, K>>; // | THttpsBaseSuccess
+  [K in keyof S]: TManagerStore<S, K, TGetRequestSuccessByStoreKey<T, S, RM, K>>; // | THttpsBaseSuccess
 };
-
-// interface TT2 extends RequestManagerBase<'main'> {
-//   getTest: {
-//     fn: () => IHttpsRequest<'main'>;
-//     success: boolean;
-//     store: { k: number; z: null };
-//   };
-//   getZero: {
-//     fn: () => IHttpsRequest<'main'>;
-//     success: boolean;
-//     store: { zero: null };
-//   };
-// }
-// type RM2 = TGetRequestNameByStoreKey<'main', TT2, 'zero'>;
-// const z: RM2 = 'getTest2';
-
-// type RM22 = TT2[TGetRequestNameByStoreKey<'main', TT2, 'k'>]['store'];
-
-// type TK = TStoreTemplate<'main', TT2>;
-// const s: TK = { i: 1 };
-// console.log(s, z);
 
 class StoreAdapter<
   T extends TTokenNames,
@@ -68,7 +46,7 @@ class StoreAdapter<
 
     super(
       {
-        initialState: fillFromArrayFn5<TStoreTemplate<T, S, RM>, { [K in keyof S]?: S[K] }>(
+        initialState: fillFromArrayFn5<TStoreTemplate<T, S, RM>, { [K in keyof S]: S[K] }>(
           store,
           (value) => value?.default,
         ),

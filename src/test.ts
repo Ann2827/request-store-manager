@@ -1,4 +1,4 @@
-import { NoDefaultIndex, NoStringIndex, SelectKeys } from '@types';
+import { NoStringIndex, SelectKeys } from '@types';
 
 type CStoreBase = Record<PropertyKey, unknown>;
 type CRMBaseTemp<S extends CStoreBase> = { key?: keyof S | undefined; a: null };
@@ -12,49 +12,37 @@ type CC2C<S extends CStoreBase, RM extends CRMBase<S>> = {
     'equals'
   >;
 };
-// type T1 = Exclude<'a' | 'b' | 'c', 'a' | 'b' | 'c'>;
-// type T2 = 'a' | 'b' extends 'a' ? 1 : 0;
-// type Diff<U1, U2> = Exclude<U1, U2> | Exclude<U2, U1>;
-// type Equals<A1, A2> = (<A>() => A extends A2 ? 1 : 0) extends <A>() => A extends A1 ? 1 : 0 ? 1 : 0;
-// type CheckLight<S extends CStoreBase, RM extends CRMBase<S>> = [Exclude<keyof RM, CC2C<S, RM>[keyof S]>] extends [
-//   keyof RM,
-// ]
-//   ? never
-//   : RM;
-type CheckLight2<S extends CStoreBase, RM extends CRMBase<S>> = keyof S extends keyof CC2C<S, RM> ? RM : never;
-type CFinish<S extends CStoreBase, RM extends CRMBase<S>> = CheckLight2<S, RM>;
 
-// type CheckLightSimple<S extends CStoreBase, RM extends CRMBase<S>> = keyof S extends keyof CC2C<S, RM>
-//   ? CC2C<S, RM>
-//   : never;
+type CheckLight2<S extends CStoreBase, RM extends CRMBase<S>> = keyof S extends keyof CC2C<S, RM> ? RM : never;
+export type CFinish<S extends CStoreBase, RM extends CRMBase<S>> = CheckLight2<S, RM>;
 
 type CStore0 = {
   key1: string;
   key2: number;
   key3: null;
 };
-interface CRM0 extends CRMBase<CStore0> {
+export interface CRM0 extends CRMBase<CStore0> {
   name1: { a: null; key: 'key1' };
   name2: { a: null; key: 'key2' };
   name3: { key: 'key3'; a: null };
   name4: { a: null };
 }
 
-const store: CStore0 = { key1: '123e', key2: 0, key3: null };
-const check: CFinish<CStore0, CRM0> = {
-  name1: { a: null, key: 'key1' },
-  name2: { a: null, key: 'key3' },
-};
-const check2: CFinish<CStore0, CRM0> = {
-  name1: { a: null, key: 'key1' },
-  name2: { a: null, key: 'key2' },
-  name3: { a: null, key: 'key3' },
-  name4: { a: null },
-};
-const ccc2c: CC2C<CStore0, CRM0> = { key1: 'name1', key2: 'name2', key3: 'name3' };
-const ccc2c1: CC2C<CStore0, CRM0> = { key1: 'name1', key3: 'name3' };
-// const ccc2c3: CheckLightSimple<CStore0, CRM0> = { key1: 'name1', key2: '123' };
-// const ccc2c2: CC2C<CStore0, CRM0>[keyof CStore0] = 'name1';
+// const store: CStore0 = { key1: '123e', key2: 0, key3: null };
+// const check: CFinish<CStore0, CRM0> = {
+//   name1: { a: null, key: 'key1' },
+//   name2: { a: null, key: 'key3' },
+// };
+// const check2: CFinish<CStore0, CRM0> = {
+//   name1: { a: null, key: 'key1' },
+//   name2: { a: null, key: 'key2' },
+//   name3: { a: null, key: 'key3' },
+//   name4: { a: null },
+// };
+// const ccc2c: CC2C<CStore0, CRM0> = { key1: 'name1', key2: 'name2', key3: 'name3' };
+// const ccc2c1: CC2C<CStore0, CRM0> = { key1: 'name1', key3: 'name3' };
+
+export default '123';
 
 /**
  * ======= manager.types =======

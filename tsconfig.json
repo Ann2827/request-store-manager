@@ -38,6 +38,7 @@
   ],
   "exclude": [
     // "__mocks__",
-    ".plop"
+    ".plop",
+    // "*.config.*"
   ]
 }

@@ -19,12 +19,17 @@ const compat = new FlatCompat({
 });
 
 const config = [
-  { ignores: ['dist/*', 'node_modules/*', '.config.*'] },
+  { ignores: [
+    'dist/*',
+    'node_modules/*',
+    // '.config.*'
+  ] },
   ...fixupConfigRules(
     compat.extends(
       'eslint:recommended',
       'plugin:unicorn/recommended',
-      'plugin:@typescript-eslint/recommended',
+      // 'plugin:@typescript-eslint/recommended',
+      'plugin:@typescript-eslint/recommended-type-checked',
       'plugin:import/errors',
       'plugin:import/warnings',
       'plugin:import/typescript',
@@ -51,8 +56,10 @@ const config = [
       sourceType: 'module',
 
       parserOptions: {
-        project: 'tsconfig.test.json',
+        // project: 'tsconfig.test.json',
         tsconfigRootDir: import.meta.dirname,
+        projectService: true,
+        // tsconfigRootDir: __dirname,
       },
       // parserOptions: {
       //   project: 'tsconfig.json',
@@ -78,6 +85,8 @@ const config = [
       'unicorn/prefer-node-protocol': 0,
       '@typescript-eslint/ban-ts-comment': 0,
       '@typescript-eslint/no-non-null-assertion': 0,
+      '@typescript-eslint/no-unsafe-assignment': 1,
+      '@typescript-eslint/prefer-promise-reject-errors': 0,
 
       'import/order': [
         'error',

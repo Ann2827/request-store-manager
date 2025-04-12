@@ -12,8 +12,9 @@ export type TTimerOptions = {
   observe?: boolean;
   /**
    * It can be called when the time runs out.
+   * // | Promise<void>
    */
-  callback?: (params?: unknown) => void | Promise<void>;
+  callback?: (params?: unknown) => void;
   /**
    * If you want to get the params passed at the start after the time has elapsed
    */

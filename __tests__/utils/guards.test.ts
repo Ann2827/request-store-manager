@@ -1,4 +1,4 @@
-import { isObject } from './guards';
+import { isObject } from '../../src/utils/guards';
 
 describe('utils guards: fn:', () => {
   test('isObject', () => {

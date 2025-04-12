@@ -1,14 +1,13 @@
 import type { IHttpsRequest, RequestManagerBase } from '@types';
 
-import { RequestManager } from '../src';
+import mockResponse from '../__mocks__/response';
+import mockFetch from '../__mocks__/fetch';
+import mockStorage from '../__mocks__/storage';
+import RequestManager from '../src/RequestManager';
 
 type TTokens = 'main';
-enum EKeys {
-  tasks = 'tasks',
-  zero = 'zero',
-}
 type Store = {
-  [EKeys.tasks]: { backlog: string[]; done: string[] };
+  tasks: { backlog: string[]; done: string[] };
   zero: boolean;
   non: null;
 };
@@ -16,7 +15,7 @@ interface RM extends RequestManagerBase<TTokens, Store> {
   getTasks: {
     fn: (quantity: number) => IHttpsRequest<TTokens>;
     success: { data: { type: 'backlog' | 'done'; text: string }[]; quantity: number };
-    storeKey: EKeys.tasks;
+    storeKey: 'tasks';
   };
   getZero: {
     fn: () => IHttpsRequest<TTokens>;
@@ -30,9 +29,15 @@ interface RM extends RequestManagerBase<TTokens, Store> {
 }
 
 describe('RequestManager class:', () => {
+  let restoreResponse: () => void;
+  let restoreFetch: () => void;
+  let restoreStorage: () => void;
   let requestManager: RequestManager<TTokens, Store, RM>;
 
   beforeAll(() => {
+    restoreResponse = mockResponse();
+    restoreFetch = mockFetch();
+    restoreStorage = mockStorage();
     requestManager = new RequestManager<TTokens, Store, RM>({
       settings: {
         logger: false,
@@ -81,13 +86,12 @@ describe('RequestManager class:', () => {
             );
           },
           store: {
-            key: EKeys.tasks,
+            key: 'tasks',
             default: { backlog: [], done: [] },
-            // TODO: fix
-            // converter: ({ state, validData }) => {
-            //   const { backlog, done } = Object.groupBy(validData.data, ({ type }) => type);
-            //   return { backlog: backlog?.map(({ text }) => text) || [], done: done?.map(({ text }) => text) || [] };
-            // },
+            converter: ({ state, validData }) => {
+              const { backlog, done } = Object.groupBy(validData.data, ({ type }) => type);
+              return { backlog: backlog?.map(({ text }) => text) || [], done: done?.map(({ text }) => text) || [] };
+            },
             validation: (data): data is Store[RM['getTasks']['storeKey']] =>
               !!data && typeof data === 'object' && 'backlog' in data && 'done' in data,
             cache: { maxAge: 0, place: 'sessionStorage' },
@@ -134,5 +138,15 @@ describe('RequestManager class:', () => {
     requestManager.restart();
   });
 
-  test('', () => {});
+  afterAll(() => {
+    restoreResponse();
+    restoreFetch();
+    restoreStorage();
+  });
+
+  test('connectLoader', () => {
+    const state = requestManager.connectLoader();
+    requestManager.getModule('loader').activate();
+    expect(state.state.active).toBe(true);
+  });
 });

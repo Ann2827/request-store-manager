@@ -2,12 +2,14 @@ import { Context, Logger, NamedLogger } from '@core';
 
 import type { IModule, IRequestConfig, TRequestSettings } from '@types';
 
+import { stringify } from '../utils/stringify';
+
 type TRequestState = Record<string, { status: 'pending' | 'stop'; response: Response | null }>;
 
 function getDefaultResponse(error?: any) {
   return new Response(JSON.stringify({}), {
     status: 503,
-    statusText: error || 'Service Unavailable',
+    statusText: stringify(error)[0] || 'Service Unavailable',
   });
 }
 

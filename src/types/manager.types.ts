@@ -26,23 +26,11 @@ import type {
 export interface Template<T extends TTokenNames, S extends TStoreBase> {
   // args?: any[];
   fn: (...args: any) => IHttpsRequest<T>;
-  success: unknown;
-  //   store?: TStoreBase;
+  success: any;
   error?: unknown;
   storeKey?: keyof S | undefined;
 }
 export type RequestManagerBase<T extends TTokenNames, S extends TStoreBase> = Record<PropertyKey, Template<T, S>>;
-
-export type TManagerStore<S extends TStoreBase, Key extends keyof S | undefined, Result> = Key extends keyof S
-  ? {
-      key: Key;
-      default: S[Key];
-      converter?: (props: { state: S[Key]; validData: Result }) => S[Key];
-      cache?: TCacheOptions;
-      validation?: TStoreValidationFn<S[Key]>;
-      empty?: TStoreEmptyFn<S[Key]>;
-    }
-  : undefined;
 
 export interface IManagerModules<
   T extends TTokenNames,
@@ -71,13 +59,25 @@ export type TManagerSettings = {
 
 export type TTokenOption = { template: TTokenTemplate; cache?: boolean | Partial<TCacheOptions> };
 
+export type TManagerStore<S extends TStoreBase, Key extends keyof S, Result> = {
+  key: Key;
+  default: S[Key];
+  converter?: (props: { state: S[Key]; validData: Result }) => S[Key];
+  cache?: TCacheOptions;
+  validation?: TStoreValidationFn<S[Key]>;
+  empty?: TStoreEmptyFn<S[Key]>;
+};
+export type TManagerStoreConfig<S extends TStoreBase, Key extends keyof S | undefined, Result> = Key extends keyof S
+  ? TManagerStore<S, Key, Result>
+  : undefined;
+
 export type TManagerConfigFull<
   T extends TTokenNames,
   S extends TStoreBase,
   RM extends RequestManagerBase<T, S>,
   K extends keyof RM,
 > = THttpsConfigNamedRequest<T, THttpsAdapter<T, S, RM>> & {
-  store?: TManagerStore<S, RM[K]['storeKey'], RM[K]['success']>;
+  store?: TManagerStoreConfig<S, RM[K]['storeKey'], RM[K]['success']>;
   mock?: (...params: Parameters<typeof globalThis.fetch>) => Response;
 };
 export interface IManagerConfig<

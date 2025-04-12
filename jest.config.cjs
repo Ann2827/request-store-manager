@@ -15,6 +15,7 @@ const config = {
   },
   // collectCoverageFrom: ['src/**/*.ts'],
   // testMatch: ['<rootDir>/src/**/*.test.ts'],
+  testMatch: ['<rootDir>/__tests__/*.test.ts'],
   modulePathIgnorePatterns: ['/node_modules/', '/.github/', '/dist/'],
   globals: {
     TextEncoder: TextEncoder,

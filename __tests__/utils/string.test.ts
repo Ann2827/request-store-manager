@@ -1,4 +1,4 @@
-import { replace } from './string';
+import { replace } from '../../src/utils/string';
 
 describe('utils string: fn:', () => {
   test('replace should be passed', () => {
