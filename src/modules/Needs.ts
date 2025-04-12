@@ -1,4 +1,4 @@
-import { fillFromArray, fillFromArrayFn5 } from '@utils';
+import { fillObject } from '@utils';
 import { Logger, NamedLogger } from '@core';
 import { NeedsActionTypes } from '@types';
 
@@ -49,11 +49,11 @@ class Needs<
   readonly #namedLogger?: NamedLogger;
 
   constructor(config: INeedsConfig<T, H, S>, modules: TNeedsModules<T, H, S, N>, logger?: Logger) {
-    const store = fillFromArray<keyof S, null>(Object.keys(modules.store.state), null);
+    const store = fillObject<S, Record<keyof S, null>>(modules.store.state, () => null);
     super({ initialState: store }, {}, { name: MODULE_NAME }, logger);
     // this.#settings = config.settings;
     this.#modules = modules;
-    this.#config = fillFromArrayFn5<INeedsConfig<T, H, S>, { [K in keyof S]: Required<TNeedsItem<T, H, S[K]>> }>(
+    this.#config = fillObject<INeedsConfig<T, H, S>, { [K in keyof S]: Required<TNeedsItem<T, H, S[K]>> }>(
       config,
       (value, key) => ({
         requestName: value.requestName,

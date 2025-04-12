@@ -1,4 +1,4 @@
-import { fillFromArray, replace } from '@utils';
+import { fillObject, replace } from '@utils';
 import { Logger } from '@core';
 
 import type {
@@ -45,9 +45,9 @@ class Token<T extends TTokenNames> extends Store<Record<T, TTokenValue>> impleme
     settings?: Partial<TTokenSettings>,
     logger?: Logger,
   ) {
-    const initialState = fillFromArray<T, TTokenValue>(Object.keys(config) as T[], null);
-    const validation = fillFromArray<T, typeof IsToken>(Object.keys(config) as T[], IsToken);
-    const empty = fillFromArray<T, TStoreEmptyFn<TTokenValue>>(Object.keys(config) as T[], IsEmpty);
+    const initialState = fillObject<TTokenConfig<T>, Record<T, TTokenValue>>(config, () => null);
+    const validation = fillObject<TTokenConfig<T>, Record<T, typeof IsToken>>(config, () => IsToken);
+    const empty = fillObject<TTokenConfig<T>, Record<T, TStoreEmptyFn<TTokenValue>>>(config, () => IsEmpty);
     super({ initialState, validation, empty }, { cache: modules?.cache }, { name: MODULE_NAME }, logger);
 
     this.#config = config;

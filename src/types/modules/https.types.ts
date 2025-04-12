@@ -29,12 +29,12 @@ export type THttpsBase<T extends TTokenNames> = {
   [name: string]: [(...args: any) => IHttpsRequest<T>, THttpsBaseSuccess, any?];
 };
 
-export type THttpsConfigNamedRequest<T extends TTokenNames, H extends THttpsBase<T>> = {
-  request: H[keyof H][0];
-  validation?: (data: unknown, response: Response) => data is H[keyof H][1];
+export type THttpsConfigNamedRequest<T extends TTokenNames, H extends THttpsBase<T>, K extends keyof H> = {
+  request: H[K][0];
+  validation?: (data: unknown, response: Response) => data is H[K][1];
   afterRequest?: (props: { response: Response; input: unknown }) => void;
   // mock?: (params: IHttpsRequest<T>) => Response;
 };
 export type IHttpsConfig<T extends TTokenNames, H extends THttpsBase<T>> = {
-  [K in keyof H]: H[K][0] | THttpsConfigNamedRequest<T, H>;
+  [K in keyof H]: H[K][0] | THttpsConfigNamedRequest<T, H, K>;
 };

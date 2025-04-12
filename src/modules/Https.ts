@@ -1,5 +1,5 @@
 import { Logger, NamedLogger, ResponseFactory } from '@core';
-import { convertQuery, fillFromArrayFn2 } from '@utils';
+import { convertQuery, fillObject } from '@utils';
 
 import type {
   IHttpsConfig,
@@ -25,9 +25,9 @@ type THttpsModules<T extends TTokenNames, N extends TNotificationsBase> = {
   notifications: Notifications<N>;
 };
 
-export function IsFullConfig<T extends TTokenNames, H extends THttpsBase<T>>(
+export function IsFullConfig<T extends TTokenNames, H extends THttpsBase<T>, K extends keyof H>(
   payload: unknown,
-): payload is THttpsConfigNamedRequest<T, H> {
+): payload is THttpsConfigNamedRequest<T, H, K> {
   return typeof payload === 'object' && !!payload && 'request' in payload && typeof payload.request === 'function';
 }
 
@@ -39,7 +39,7 @@ const defaultResponse = new Response(JSON.stringify({}), {
 export const MODULE_NAME = 'https';
 
 class Https<T extends TTokenNames, H extends THttpsBase<T>, N extends TNotificationsBase> implements IModule {
-  readonly #config: Record<keyof H, Required<THttpsConfigNamedRequest<T, H>>>;
+  readonly #config: { [K in keyof H]: Required<THttpsConfigNamedRequest<T, H, K>> };
 
   readonly #modules: THttpsModules<T, N>;
 
@@ -62,28 +62,26 @@ class Https<T extends TTokenNames, H extends THttpsBase<T>, N extends TNotificat
     this.#modules = modules;
     this.#namedLogger = logger?.named(MODULE_NAME);
     const defaultValidationFn = (d: unknown, _r: Response): d is H[keyof H][1] => true;
-    this.#config = fillFromArrayFn2<
-      keyof H,
-      H[keyof H][0] | THttpsConfigNamedRequest<T, H>,
-      Required<THttpsConfigNamedRequest<T, H>>
-    >(Object.entries(config.namedRequests), (value) =>
-      IsFullConfig<T, H>(value)
-        ? {
-            request: value.request,
-            validation: value?.validation
-              ? (d, r): d is H[keyof H][1] => {
-                  const valid = value.validation!(d, r);
-                  if (!valid) this.#namedLogger?.error(`Not valid`);
-                  return valid;
-                }
-              : defaultValidationFn,
-            afterRequest: value?.afterRequest || (() => {}),
-          }
-        : {
-            request: value,
-            validation: defaultValidationFn,
-            afterRequest() {},
-          },
+    this.#config = fillObject<IHttpsConfig<T, H>, { [K in keyof H]: Required<THttpsConfigNamedRequest<T, H, K>> }>(
+      config,
+      (value, key) =>
+        IsFullConfig<T, H, typeof key>(value)
+          ? {
+              request: value.request,
+              validation: value?.validation
+                ? (d, r): d is H[keyof H][1] => {
+                    const valid = value.validation!(d, r);
+                    if (!valid) this.#namedLogger?.error(`Not valid`);
+                    return valid;
+                  }
+                : defaultValidationFn,
+              afterRequest: value?.afterRequest || (() => {}),
+            }
+          : {
+              request: value as H[typeof key][0],
+              validation: defaultValidationFn,
+              afterRequest() {},
+            },
     );
   }
 

@@ -42,7 +42,7 @@ class RequestManager<
           if (
             !name ||
             !config.namedRequests?.[name] ||
-            !IsFullConfig<T, THttpsAdapter<T, S, RM>>(config.namedRequests[name]) ||
+            !IsFullConfig<T, THttpsAdapter<T, S, RM>, typeof name>(config.namedRequests[name]) ||
             !config.namedRequests[name].mock
           )
             return;

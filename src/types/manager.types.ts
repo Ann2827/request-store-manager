@@ -76,7 +76,7 @@ export type TManagerConfigFull<
   S extends TStoreBase,
   RM extends RequestManagerBase<T, S>,
   K extends keyof RM,
-> = THttpsConfigNamedRequest<T, THttpsAdapter<T, S, RM>> & {
+> = THttpsConfigNamedRequest<T, THttpsAdapter<T, S, RM>, K> & {
   store?: TManagerStoreConfig<S, RM[K]['storeKey'], RM[K]['success']>;
   mock?: (...params: Parameters<typeof globalThis.fetch>) => Response;
 };

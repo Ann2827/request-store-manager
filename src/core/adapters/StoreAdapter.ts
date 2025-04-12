@@ -1,5 +1,5 @@
 import { CacheStrict, Store } from '@modules';
-import { fillFromArrayFn5 } from '@utils';
+import { fillObject } from '@utils';
 
 import type {
   IManagerConfig,
@@ -46,22 +46,19 @@ class StoreAdapter<
 
     super(
       {
-        initialState: fillFromArrayFn5<TStoreTemplate<T, S, RM>, { [K in keyof S]: S[K] }>(
+        initialState: fillObject<TStoreTemplate<T, S, RM>, { [K in keyof S]: S[K] }>(store, (value) => value?.default),
+        validation: fillObject<TStoreTemplate<T, S, RM>, { [K in keyof S]: TStoreValidationFn<S[K]> | undefined }>(
           store,
-          (value) => value?.default,
+          (value) => value?.validation,
         ),
-        validation: fillFromArrayFn5<
-          TStoreTemplate<T, S, RM>,
-          { [K in keyof S]: TStoreValidationFn<S[K]> | undefined }
-        >(store, (value) => value?.validation),
-        empty: fillFromArrayFn5<TStoreTemplate<T, S, RM>, { [K in keyof S]: TStoreEmptyFn<S[K]> | undefined }>(
+        empty: fillObject<TStoreTemplate<T, S, RM>, { [K in keyof S]: TStoreEmptyFn<S[K]> | undefined }>(
           store,
           (value) => value?.empty,
         ),
       },
       {
         cache: new CacheStrict<keyof typeof store>(
-          fillFromArrayFn5<TStoreTemplate<T, S, RM>, { [K in keyof S]: TCacheOptions | boolean }>(
+          fillObject<TStoreTemplate<T, S, RM>, { [K in keyof S]: TCacheOptions | boolean }>(
             store,
             (value) => value?.cache ?? false,
           ),

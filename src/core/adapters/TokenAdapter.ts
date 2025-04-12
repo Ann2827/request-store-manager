@@ -1,5 +1,5 @@
 import { CacheStrict, Token } from '@modules';
-import { fillFromArrayFn4 } from '@utils';
+import { fillObject } from '@utils';
 
 import type {
   IManagerConfig,
@@ -22,8 +22,11 @@ class TokenAdapter<
   N extends TNotificationsBase,
 > extends Token<T> {
   constructor(config: IManagerConfig<T, S, RM, N>, modules: TTokenModules, logger: Logger) {
-    const tokens = fillFromArrayFn4<Record<T, TTokenOption>, TTokenTemplate>(config.tokens, ({ template }) => template);
-    const cacheTokens = fillFromArrayFn4<Record<T, TTokenOption>, boolean | Partial<TCacheOptions>>(
+    const tokens = fillObject<Record<T, TTokenOption>, Record<T, TTokenTemplate>>(
+      config.tokens,
+      ({ template }) => template,
+    );
+    const cacheTokens = fillObject<Record<T, TTokenOption>, Record<T, boolean | Partial<TCacheOptions>>>(
       config.tokens,
       ({ cache }) => cache ?? false,
     );

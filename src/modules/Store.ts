@@ -1,5 +1,5 @@
 import { Context, Logger, NamedLogger } from '@core';
-import { fillFromArrayFn, fillFromArrayFn3 } from '@utils';
+import { fillObject } from '@utils';
 
 import type { IModule, TStoreBase, TStoreConfig, TStoreEmptyFn, TStoreSettings, TStoreValidationFn } from '@types';
 
@@ -21,7 +21,7 @@ class Store<S extends TStoreBase> extends Context<S> implements IModule {
   readonly #validation: { [K in keyof S]: TStoreValidationFn<S[K]> };
   // readonly #validation: Record<keyof S, TStoreValidationFn<S[keyof S]>>;
 
-  readonly #empty: Record<keyof S, TStoreEmptyFn<S[keyof S]>>;
+  readonly #empty: { [K in keyof S]: TStoreEmptyFn<S[K]> };
 
   readonly #modules: TStateModules<keyof Partial<S>>;
 
@@ -39,13 +39,13 @@ class Store<S extends TStoreBase> extends Context<S> implements IModule {
     settings?: Partial<TStoreSettings>,
     logger?: Logger,
   ) {
-    const filledValidation = fillFromArrayFn3<S, { [K in keyof S]: TStoreValidationFn<S[K]> }>(
+    const filledValidation = fillObject<S, { [K in keyof S]: TStoreValidationFn<S[K]> }>(
       config.initialState,
-      (key) => config?.validation?.[key] || ((d: unknown, _r?: Response): d is S[typeof key] => true),
+      (_, key) => config?.validation?.[key] || ((d: unknown, _r?: Response): d is S[typeof key] => true),
     );
-    const filledEmpty = fillFromArrayFn<keyof S, TStoreEmptyFn<S[keyof S]>>(
-      Object.keys(config.initialState),
-      (key) => config?.empty?.[key] || ((value: S[typeof key]): boolean => !value),
+    const filledEmpty = fillObject<S, { [K in keyof S]: TStoreEmptyFn<S[K]> }>(
+      config.initialState,
+      (_, key) => config?.empty?.[key] || ((value: S[typeof key]): boolean => !value),
     );
     Object.entries(config.initialState).forEach(([key, value]) => {
       this.#validate(filledValidation[key], key, value);

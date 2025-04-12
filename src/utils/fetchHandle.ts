@@ -1,5 +1,4 @@
-import { isObject } from '@utils';
-
+import { isObject } from './guards';
 import { stringify } from './stringify';
 
 const getPairs = (obj: object): [string[], string][] => {

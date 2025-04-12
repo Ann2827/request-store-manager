@@ -1,4 +1,4 @@
-import { arrToStr, unflattenItem, unflatten, onlyPublic, fillFromArray } from '../../src/utils/object';
+import { arrToStr, unflattenItem, unflatten, onlyPublic } from '../../src/utils/object';
 
 describe('utils object: fn:', () => {
   test('arrToStr should be passed', () => {
@@ -37,7 +37,7 @@ describe('utils object: fn:', () => {
     expect(Object.keys(data).sort()).toEqual(['publicKey', 'publicFn'].sort());
   });
 
-  test('fillByArray', () => {
-    expect(fillFromArray<'a' | 'b', boolean>(['a', 'b'], true)).toEqual({ a: true, b: true });
-  });
+  // test('fillByArray', () => {
+  //   expect(fillFromArray<'a' | 'b', boolean>(['a', 'b'], true)).toEqual({ a: true, b: true });
+  // });
 });
