@@ -32,7 +32,7 @@ export type THttpsBase<T extends TTokenNames> = {
 export type THttpsConfigNamedRequest<T extends TTokenNames, H extends THttpsBase<T>, K extends keyof H> = {
   request: H[K][0];
   validation?: (data: unknown, response: Response) => data is H[K][1];
-  afterRequest?: (props: { response: Response; input: unknown }) => void;
+  afterRequest?: (props: { response: Response; input: unknown; validData: H[K][1] }) => void;
   // mock?: (params: IHttpsRequest<T>) => Response;
 };
 export type IHttpsConfig<T extends TTokenNames, H extends THttpsBase<T>> = {

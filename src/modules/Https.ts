@@ -140,7 +140,7 @@ class Https<T extends TTokenNames, H extends THttpsBase<T>, N extends TNotificat
       this.#modules.notifications.send({ data: message[0], type: message[1], response });
 
     const validData = config.validation(data, response);
-    if (validData) config.afterRequest({ input, response });
+    if (validData) config.afterRequest({ input, response, validData });
 
     if (fetchData.settings?.loader ?? this.#settings.loader) this.#modules.loader.determinate();
 
