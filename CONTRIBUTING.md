@@ -1,4 +1,4 @@
-# Contributing to React hooks library
+# Contributing to request-store-manager
 
 👍🎉 First off, thanks for taking the time to contribute! 🎉👍
 
@@ -10,8 +10,8 @@
 
 ### System requirements
 
-- `node` >=16
-- `npm` >=8
+- `node` >=22
+- `npm` >=10
 
 ### Fork
 
@@ -19,9 +19,9 @@
 your fork:
 ```sh
   # Clone your fork
-  git clone https://github.com/<your-username>/library-react-hooks.git
+  git clone https://github.com/<your-username>/request-store-manager.git
   # Navigate to the newly cloned directory
-  cd library-react-hooks
+  cd request-store-manager
 ```
 
 ### First run
@@ -50,7 +50,7 @@ your fork:
 
 ### Локальное подключение библиотеки
 
-`npm-link-better --copy ../library-react-hooks -w`
+`npm-link-better --copy ../request-store-manager -w`
 
 1. Установить глобально `npm install -g npm-link-better`
 2. Выполнить локально билд в подключаемой библиотеке
