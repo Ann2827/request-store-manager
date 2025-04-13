@@ -12,16 +12,16 @@ describe('utils diff: fn:', () => {
   test('should be return diff for obj', () => {
     expect(getDiff({ a: '1' }, { a: '2' })).toEqual([['a:1', 'a:2']]);
     expect(getDiff({ a: '1' }, { a: null })).toEqual([['a:1', 'a:null']]);
-    expect(getDiff({ a: '1' }, { a: '1', b: '1' })).toEqual([['b:undefined', 'b:1']]);
+    expect(getDiff({ a: '1' }, { a: '1', b: '1' })).toEqual([['b:', 'b:1']]);
     expect(getDiff({ a: '1' }, { b: '1' })).toEqual([
-      ['a:1', 'a:undefined'],
-      ['b:undefined', 'b:1'],
+      ['a:1', 'a:'],
+      ['b:', 'b:1'],
     ]);
     expect(getDiff({ a: { b: '1' } }, { a: { b: '2' } })).toEqual([['a.b:1', 'a.b:2']]);
   });
 
   test('should be return diff for obj functions', () => {
-    expect(getDiff({ a: {} }, { a: { f: () => true } })).toEqual([['a.f:undefined', 'a.f:"() => true"']]);
+    expect(getDiff({ a: {} }, { a: { f: () => true } })).toEqual([['a.f:', 'a.f:"() => true"']]);
     expect(
       getDiff(
         { a: {} },
@@ -33,6 +33,6 @@ describe('utils diff: fn:', () => {
           },
         },
       ),
-    ).toEqual([['a.f:undefined', 'a.f:"f() {return false;}"']]);
+    ).toEqual([['a.f:', 'a.f:"f() {return false;}"']]);
   });
 });

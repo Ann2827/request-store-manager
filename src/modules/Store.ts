@@ -47,13 +47,14 @@ class Store<S extends TStoreBase> extends Context<S> implements IModule {
       config.initialState,
       (_, key) => config?.empty?.[key] || ((value: S[typeof key]): boolean => !value),
     );
-    Object.entries(config.initialState).forEach(([key, value]) => {
-      this.#validate(filledValidation[key], key, value);
-    });
 
     const name = settings?.name || MODULE_NAME;
     const namedLogger = logger?.named(name);
     super(config.initialState, namedLogger);
+
+    Object.entries(config.initialState).forEach(([key, value]) => {
+      this.#validate(filledValidation[key], key, value);
+    });
 
     this.#validation = filledValidation;
     this.#empty = filledEmpty;
@@ -80,9 +81,13 @@ class Store<S extends TStoreBase> extends Context<S> implements IModule {
     this.#modules.cache?.set(key.toString(), value.toString());
   }
 
+  public isEmpty<K extends keyof S = keyof S>(key: K, value: S[K]): boolean {
+    return this.#empty[key](value);
+  }
+
   public get<K extends keyof S = keyof S>(key: K): S[K] {
     const value = super.state[key];
-    if (!this.#empty[key](value)) return value;
+    if (!this.isEmpty(key, value)) return value;
 
     const cacheValue = this.#modules.cache?.get(key);
     if (cacheValue === undefined) return value;

@@ -1,4 +1,4 @@
-import { getDiff } from '@utils';
+import { clone, getDiff } from '@utils';
 
 import type { TSubscribeFn, TSetFn } from '@types';
 
@@ -36,13 +36,13 @@ class Context<S extends object> {
   }
 
   constructor(initialState: S, namedLogger?: NamedLogger) {
-    this.#state = { ...initialState };
+    this.#state = clone(initialState);
     this.#listeners = [];
     this.#namedLogger = namedLogger;
 
     this.restart = () => {
       this.#listeners = [];
-      this.#state = { ...initialState };
+      this.#state = clone(initialState);
     };
 
     this.__test = this.__test.bind(this);
@@ -75,8 +75,8 @@ class Context<S extends object> {
    * @example context.setState((prevState) => ({ ...prevState, test: 1 })) или context.setState({ test: 1 })
    */
   public setState(fn: TSetFn<S>): void {
-    const thisState: S = { ...this.#state };
-    const newState: S = typeof fn === 'function' ? fn(this._getState()) : { ...fn };
+    const thisState: S = clone(this.#state);
+    const newState: S = typeof fn === 'function' ? fn(this._getState()) : clone(fn);
     const diffState = getDiff(thisState, newState);
     if (diffState.length === 0) return;
 

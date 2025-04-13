@@ -239,7 +239,8 @@ export type Last<U> =
     : never; // ^^^ Last parameter
 
 export type NoStringIndex<T> = { [K in keyof T as string extends K ? never : K]: T[K] };
-export type NoDefaultIndex<T> = { [K in keyof T as PropertyKey extends K ? never : K]: T[K] };
+// Не очень работает
+// export type NoDefaultIndex<T> = { [K in keyof T as PropertyKey extends K ? never : K]: T[K] };
 
 // type NonNullable<T> = Exclude<T, null | undefined>;
 

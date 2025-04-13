@@ -31,7 +31,7 @@ class NeedsAdapter<
     const needsConfig = Object.entries(config.namedRequests).reduce<INeedsConfig<T, THttpsAdapter<T, S, RM>, S>>(
       (prev, [hKey, value]) => {
         if (IsFullRequestConfig<T, S, RM, typeof hKey>(value) && value.store)
-          return { ...prev, [value.store.key]: { requestName: hKey, converts: value.store.converter } };
+          return { ...prev, [value.store.key]: { requestName: hKey, converter: value.store.converter } };
         return prev;
       },
       {} as INeedsConfig<T, THttpsAdapter<T, S, RM>, S>,

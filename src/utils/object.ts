@@ -1,3 +1,5 @@
+import { isArray, isObject } from './guards';
+
 export const arrToStr = (arr?: string[] | string, splitter = ', '): string => {
   if (!arr) return '';
   if (typeof arr === 'string') return arr;
@@ -45,4 +47,10 @@ export const fillObject = <T extends Record<PropertyKey, unknown>, V extends Rec
  */
 export function stringifyFunction(_: any, val: any): any {
   return typeof val === 'function' ? `${val}`.replaceAll('\n', '').replaceAll('  ', '') : val;
+}
+
+export function clone<T extends object | []>(data: T): T {
+  if (isObject<T>(data)) return { ...data };
+  if (isArray<T>(data)) return [...data];
+  return data;
 }

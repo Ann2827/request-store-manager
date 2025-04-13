@@ -1,4 +1,4 @@
-import type { IHttpsRequest, RequestManagerBase } from '@types';
+import { NeedsActionTypes, type IHttpsRequest, type RequestManagerBase } from '@types';
 
 import mockResponse from '../__mocks__/response';
 import mockFetch from '../__mocks__/fetch';
@@ -136,6 +136,7 @@ describe('RequestManager class:', () => {
 
   beforeEach(() => {
     requestManager.restart();
+    requestManager.setToken('main', '123');
   });
 
   afterAll(() => {
@@ -148,5 +149,37 @@ describe('RequestManager class:', () => {
     const state = requestManager.connectLoader();
     requestManager.getModule('loader').activate();
     expect(state.state.active).toBe(true);
+  });
+
+  test('namedRequest', async () => {
+    const { validData } = await requestManager.namedRequest('getTasks', 1);
+    expect(validData?.quantity).toStrictEqual(1);
+  });
+
+  test('needAction', async () => {
+    await requestManager.needAction('tasks', NeedsActionTypes.request, 1);
+    expect(requestManager.get('tasks')).toStrictEqual({ backlog: ['task1'], done: ['tsak2'] });
+  });
+
+  test('sendNotification', () => {
+    requestManager.sendNotification({ data: { text: 'Данные успешно получены.' }, type: 'success' });
+    expect(requestManager.getModule('notifications').state?.[0].data).toStrictEqual({
+      text: 'Данные успешно получены.',
+    });
+  });
+
+  test('subscribe', () => {
+    let state = requestManager.getModule('store').state;
+    const clean = requestManager.subscribe((next) => {
+      state = next;
+    });
+    requestManager.set('zero', () => true);
+    expect(state.zero).toStrictEqual(true);
+    clean();
+  });
+
+  test('state', () => {
+    requestManager.set('zero', () => true);
+    expect(requestManager.state.zero).toStrictEqual(true);
   });
 });

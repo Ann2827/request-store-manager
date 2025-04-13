@@ -1,11 +1,12 @@
 import { Loader, Messages, Timer, Token, Request, Https, Notifications } from '@modules';
 import { Logger } from '@core';
+import { NeedsActionTypes } from '@types';
 
 import type {
   CheckRM,
   IManagerConfig,
   IManagerModules,
-  NeedsActionTypes,
+  NoStringIndex,
   RequestManagerBase,
   THttpsAdapter,
   TNeedsAdapter,
@@ -13,6 +14,7 @@ import type {
   TNotificationsBase,
   TNotificationsSettings,
   TStoreBase,
+  TSubscribeFn,
   TTokenNames,
 } from '@types';
 
@@ -102,15 +104,16 @@ class RequestManager<
     return this.#modules.token.setToken(...args);
   }
 
-  public namedRequest(
-    ...args: Parameters<Https<T, THttpsAdapter<T, S, RM>, N>['namedRequest']>
-  ): ReturnType<Https<T, THttpsAdapter<T, S, RM>, N>['namedRequest']> {
-    return this.#modules.https.namedRequest(...args);
+  public namedRequest<Name extends keyof THttpsAdapter<T, S, RM>>(
+    name: Name,
+    ...args: Parameters<THttpsAdapter<T, S, RM>[Name][0]>
+  ): Promise<{ response: Response; validData: THttpsAdapter<T, S, RM>[Name][1] | null; data: unknown }> {
+    return this.#modules.https.namedRequest(name, ...args);
   }
 
   public async needAction<Name extends keyof S = keyof S>(
     name: Name,
-    type: NeedsActionTypes,
+    type: NeedsActionTypes = NeedsActionTypes.request,
     ...args: Parameters<
       TNeedsAdapter<T, S, RM>[Name] extends keyof THttpsAdapter<T, S, RM>
         ? THttpsAdapter<T, S, RM>[TNeedsAdapter<T, S, RM>[Name]][0]
@@ -121,14 +124,17 @@ class RequestManager<
   }
 
   public sendNotification(
-    props: Omit<TNotification<N>, 'id'> & Partial<Pick<TNotificationsSettings, 'duration' | 'sticky'>>,
+    props: Omit<TNotification<N>, 'id' | 'drop'> & Partial<Pick<TNotificationsSettings, 'duration' | 'sticky'>>,
   ): () => void {
     return this.#modules.notifications.send(props);
   }
 
-  public subscribe() {
-    // FIXME: работает?
-    return this.#modules.needs.subscribe.bind(this);
+  public subscribe(fn: TSubscribeFn<S>): () => void {
+    return this.#modules.store.subscribe(fn);
+  }
+
+  public get state(): S {
+    return this.#modules.store.state;
   }
 
   public get<K extends keyof S = keyof S>(key: K): S[K] {
@@ -139,7 +145,7 @@ class RequestManager<
     this.#modules.store.set(key, fn);
   }
 
-  public getModule<Name extends keyof IManagerModules<T, S, RM, N>>(
+  public getModule<Name extends keyof NoStringIndex<IManagerModules<T, S, RM, N>>>(
     name: Name,
   ): IManagerModules<T, S, RM, N>[Name] | never {
     if (!(name in this.#modules)) throw new Error(`RequestManager module ${name} does't exists.`);

@@ -31,14 +31,11 @@ export function IsFullConfig<T extends TTokenNames, H extends THttpsBase<T>, K e
   return typeof payload === 'object' && !!payload && 'request' in payload && typeof payload.request === 'function';
 }
 
-const defaultResponse = new Response(JSON.stringify({}), {
-  status: 401,
-  statusText: 'Unauthorized',
-});
-
 export const MODULE_NAME = 'https';
 
-class Https<T extends TTokenNames, H extends THttpsBase<T>, N extends TNotificationsBase> implements IModule {
+class Https<T extends TTokenNames, H extends THttpsBase<T>, N extends TNotificationsBase = TNotificationsBase>
+  implements IModule
+{
   readonly #config: { [K in keyof H]: Required<THttpsConfigNamedRequest<T, H, K>> };
 
   readonly #modules: THttpsModules<T, N>;
@@ -113,7 +110,10 @@ class Https<T extends TTokenNames, H extends THttpsBase<T>, N extends TNotificat
         this.#namedLogger?.error(`Token ${fetchData.tokenName.toString()} not found`);
         if (fetchData.settings?.loader ?? this.#settings.loader) this.#modules.loader.determinate();
         return {
-          response: defaultResponse,
+          response: new Response(JSON.stringify({}), {
+            status: 401,
+            statusText: 'Unauthorized',
+          }),
           validData: null,
           data: {},
         };

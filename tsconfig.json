@@ -34,7 +34,7 @@
     },
   },
   "include": [
-    "src", "__tests__"
+    "src", "__tests__", "__mocks__"
   ],
   "exclude": [
     // "__mocks__",

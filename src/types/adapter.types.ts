@@ -28,7 +28,7 @@ export type TNeedsAdapter0<T extends TTokenNames, S extends TStoreBase, RM exten
   keyof S
 >;
 export type TNeedsAdapter<T extends TTokenNames, S extends TStoreBase, RM extends RequestManagerBase<T, S>> = {
-  [K in keyof S]: SelectKeys<NoStringIndex<RM>, { storeKey: K }, 'contains->'> | undefined;
+  [K in keyof S]: SelectKeys<NoStringIndex<RM>, { storeKey: K }, 'contains->'>;
 };
 
 // type TNeedsAdapter2<T extends TTokenNames, S extends TStoreBase, RM extends RequestManagerBase<T, S>> = {

@@ -18,7 +18,7 @@ export const isUndefined = (data: any): data is undefined => data === undefined;
 
 export const isNumber = (data: any): data is number => typeof data === 'number';
 
-export const isArray = (data: any): data is [] => Array.isArray(data);
+export const isArray = <T = []>(data: any): data is T => Array.isArray(data);
 
 export const isFunction = (data: any): data is void => typeof data === 'function';
 

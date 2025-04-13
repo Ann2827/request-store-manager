@@ -70,7 +70,7 @@ class Needs<
 
   public async action<Name extends keyof S = keyof S>(
     name: Name,
-    type: NeedsActionTypes,
+    type: NeedsActionTypes = NeedsActionTypes.request,
     ...args: Parameters<L[Name] extends keyof H ? H[L[Name]][0] : () => void>
   ): Promise<void> {
     const status = super.get(name);
@@ -78,7 +78,7 @@ class Needs<
 
     if (type === NeedsActionTypes.request) {
       const cacheData = this.#modules.store.get(name);
-      if (cacheData) {
+      if (cacheData && !this.#modules.store.isEmpty(name, cacheData)) {
         super.set(name, () => true);
         this.#namedLogger?.message(`${name.toString()} restored from cache.`);
         return;
