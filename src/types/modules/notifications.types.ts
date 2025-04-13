@@ -24,6 +24,6 @@ export type TNotification<N extends TNotificationsBase> = {
   type: TNotificationType;
   id: number;
   drop: () => void;
-  //   response?: Response;
+  response?: Response;
   //   dataJson?: any;
 };

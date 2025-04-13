@@ -44,15 +44,17 @@
 - запускать mock mode, кэшировать данные, обращаться к хранилищу. Есть возможность подключить сообщения к i18 и описать стандартные ошибки
 
 ## Features <a name = "features"></a>
-- SettingsStore - инициализация конфига запросов
-- LoaderStore - нужно подключить слушатель к своему компоненту Loader. При запросах будет запускаться автоматически (можно запретить автозапуск для отдельных запросов). Так же можно запускать вручную.
-- MessagesStore - напишите сообщения для стандартных ошибок (404, 500,..). При использовании i18, вместо текстов положите ключи.
-- NotificationStore - нужно подключить слушатель к своему компоненту Notifications. При запросах будет вызывать сообщения из MessagesStore (можно запретить автозапуск для отдельных запросов). Так же можно вызывать кастомные сообщения вручную.
-- HttpsStore - выполняет запросы из SettingsStore конфига (можно выполнять неописанные запросы). Чаще используется для POST, PATCH, DELETE, PUT.
-- NeedsStore - минималистичный запуск GET запросов с сохранением данных в хранилище и кэшированием.
-- CacheStore - работает с localStorage, sessionStorage
-- ScenariosStore - позволяет запускать действия после запроса. Например обновление данных или показ сообщения.
-- TimerStore - просто таймер.
+- Loader - нужно подключить слушатель к своему компоненту Loader. При запросах будет запускаться автоматически (можно запретить автозапуск для отдельных запросов). Так же можно запускать вручную.
+- Messages - напишите сообщения для стандартных ошибок (404, 500,..). При использовании i18, вместо текстов положите ключи.
+- Notifications - нужно подключить слушатель к своему компоненту Notifications. При запросах будет вызывать сообщения из MessagesStore (можно запретить автозапуск для отдельных запросов). Так же можно вызывать кастомные сообщения вручную.
+- Https - выполняет запросы из конфига (можно выполнять неописанные запросы). Чаще используется для POST, PATCH, DELETE, PUT.
+- Needs - минималистичный запуск GET запросов с сохранением данных в хранилище и кэшированием.
+- Cache - работает с localStorage, sessionStorage.
+- CacheStrict - обрабатывает только значения по заданным ключам.
+- Timer - просто таймер.
+- Request - выполняет fetch запросы и mock запросы.
+- Token - хранилище токенов.
+- Store - хранилище ответов из Needs. Можно создавать самостоятельные хранилища.
 
 
 ## ✨ Demo <a name = "demo"></a>
@@ -80,7 +82,7 @@ npm install --save request-store-manager
 2. Опишите типы
 *api/types.ts*
 ```ts
-import type { IHttpsRequest } from 'library-react-hooks';
+import type { RequestManagerBase, IHttpsRequest, TNotificationsBase } from 'request-store-manager';
 
 type TError = { message?: string[]; error?: string; statusCode?: number };
 
@@ -89,47 +91,51 @@ interface ITask {
   title: string;
 }
 
-declare module 'library-react-hooks' {
-  /**
-   * Задайте имя токена. В запросах вы будете указывать это имя. Если вы работаете с несколькими api,
-   * то можно задать несколько имен.
-   **/ 
-  interface OverridableHttpsTokenNames {
-    names: 'main' | 'second' | 'third';
-  }
-  /**
-   * Опишите запросы
-   * { <имя запроса>: [(<аргументы>) => IHttpsRequest, <успешный ответ>, <формат ошибки>] }
-   **/ 
-  interface OverridableHttpsRequestsConfig {
-    postAuth: [(props: { email: string; password: string }) => IHttpsRequest, { token: string }, TError];
-    getTasks: [() => IHttpsRequest, { tasks: ITask[]; total: number }, TError];
-    deleteTask: [(id: number) => IHttpsRequest, object, TError];
-    patchTask: [(id: number, task: Omit<ITask, 'id'>) => IHttpsRequest, ITask, TError];
-    postTask: [(task: Omit<ITask, 'id'> & { password: string }) => IHttpsRequest, ITask, TError];   
-  }
-  /**
-   * Задайте формат хранилища
-   **/ 
-  interface OverridableNeedsStoreConfig {
-    tasks: ITask[] | null;
-  }
-  /**
-   * Дополнительно
-   * =================================================
-   * Вы можете расширить передаваемые поля уведомления. По умолчанию Partial<Record<'title' | 'text' | 'action', string>>
-   **/ 
-  interface OverridableNotificationsSendData {
-    action2: string;
-  }
-  /**
-   * Вы можете расширить названия сценариев. По умолчанию используются имена запросов
-   * Partial<Record<keyof OverridableHttpsRequestsConfig, void>>
-   **/ 
-  interface OverridableScenariosAfterRequests {
-    myCustomName: void;
-  }
+/**
+  * Задайте имя токена. В запросах вы будете указывать это имя. Если вы работаете с несколькими api,
+  * то можно задать несколько имен.
+**/ 
+type TTokens = 'main' | 'second' | 'third';
+
+/**
+ * Задайте формат хранилища
+**/ 
+type TStore = {
+  tasks: { backlog: string[]; done: string[] };
+  zero: boolean;
+  non: null;
 }
+
+/**
+  * Опишите запросы (для GET можно добавить storeKey для автосохранения), типы успешных ответов
+**/ 
+interface RM extends RequestManagerBase<TTokens, TStore> {
+  getTasks: {
+    fn: (quantity: number) => IHttpsRequest<TTokens>;
+    success: { data: { type: 'backlog' | 'done'; text: string }[]; quantity: number };
+    storeKey: 'tasks';
+    error: TError;
+  };
+  getZero: {
+    fn: () => IHttpsRequest<TTokens>;
+    success: boolean;
+    storeKey: 'zero';
+  };
+  postAuth: {
+    fn: () => IHttpsRequest<TTokens>;
+    success: boolean;
+  };
+}
+
+/**
+  * Дополнительно
+  * =================================================
+  * Вы можете расширить передаваемые поля уведомления. По умолчанию Partial<Record<'title' | 'text' | 'action', string>>
+**/ 
+interface TNotifications extends TNotificationsBase {
+  action2: string;
+}
+
 ```
 
 3. Создайте конфиг и подключите его
@@ -140,7 +146,7 @@ import './api';
 
 *api/index.ts*
 ```ts
-import { HttpsStore, ICustomFetchCheckProps, NeedsStore, NotificationsStore, SettingsStore } from 'library-react-hooks';
+import { HttpsStore, ICustomFetchCheckProps, NeedsStore, NotificationsStore, SettingsStore } from 'request-store-manager';
 
 import { GET_TASKS, POST_AUTH, POST_TASK } from './urls';
 import { mockPosts, mockSuccessAnswer, mockTasks, mockUsers } from './mocks';
@@ -151,129 +157,98 @@ function validationSuccessAnswer(dataJson: unknown, response: Response | undefin
   return !!response?.ok && IsObject(dataJson);
 }
 
-SettingsStore.initialize({
-  logger: !!import.meta.env.DEV,
-  namedRequests: {
-    // Сокращенный вариант записи. Без валидации, моков и т д
-    postAuth: (props) => ({
-      url: POST_AUTH,
-      init: { method: 'POST' },
-      body: props,
-    }),
-    // Полное описание запроса
-    getTasks: {
-      request: () => ({
-        url: GET_TASKS, // обязательное поле
-        init: { method: 'GET' },
-        body: { ... },
-        query: { ... },
-        settings: { loader: false, messages: false },
-        tokenName: 'main',
-      }),
-      validation: (dataJson, response): dataJson is { tasks: ITask[]; total: number } =>
-        validationSuccessAnswer(dataJson, response) && IsTaskArray(dataJson.tasks) && ...,
-      mock: { body: { tasks: [...mockTasks], total: 10 } },
-      store: {
-        key: 'tasks', // обязательное поле
-        default: { backlog: [], done: [] }, // обязательное поле. значение по умолчанию
-        // Что из body положить в хранилище
-        composite: ({ state, dataJson }) => {
-          return Object.groupBy(dataJson.tasks, ({ status }) => {
-            switch (status) {
-              case 'Backlog':
-                return 'backlog';
-              default:
-                return 'done';
-            }
-          });
-        },
-        cache: { time: null, clean: { thisResponseIs: false }, place: 'sessionStorage' },
-      },
-    },
-    postTask: {
-      request: (task) => ({
-        url: POST_TASK,
-        init: { method: 'POST' },
-        body: task,
-        tokenName: 'main',
-      }),
-      validation: (dataJson, response): dataJson is ITask =>
-        validationSuccessAnswer(dataJson, response) && IsTask(dataJson) && ...,
-      // Альтернативный вариант. Подходит для запросов POST, PUT, PATCH. Когда в ответе должны оказаться отправленные данные.
-      mock: ({ requestName, options, input }: ICustomFetchCheckProps) => {
-        if (!options?.body) return;
-        return new Response(JSON.stringify(options.body));
-      },
-      afterRequest: ({ response, input, valid }) => {
-        if (!valid) return;
-        NeedsStore.set('tasks', (prev: ITask[]) => [...prev, dataJson]);
-        NotificationsStore.send({
-          data: { text: 'Задача успешно добавлена' }, // or i18 key 'message.taskAdd'
-          type: 'success',
-          sticky: false,
-        });
-      },
-    },
-  },
-  modules: {
-    https: {
+requestManager = new RequestManager<TTokens, TStore, RM>({
       settings: {
-        mockMode: Boolean(import.meta.env.VITE_MOCK_MODE === 'true'), // Запускайте отдельной командой из packege.json
-        waitToken: false, // Если токена еще нет, но запрос пошел, то сохранить запрос в очередь и запустить очередь после получения токена
-        loader: true,
-        messages: true,
-        requestWithoutToken: true,
-        mockDelay: 1, // in sec for mock mode
+        logger: false,
+        notifications: {},
+        cache: { prefix: 'test' },
+        request: { mockMode: true },
+        https: {
+          waitToken: false,
+          notifications: false,
+          loader: false,
+        },
       },
       tokens: {
         main: {
-          template: 'bearer', // 'bearer' = template "Authorization:Bearer ${token}"
+          template: 'bearer',
           cache: {
-            time: 60 * 24, // null - если у кэша нет срока годности | значение в секундах
-            cleanWhenResponseIs: [401] // очистить, если response.ok = false | response.status = 401
-          }
+            maxAge: 60 * 24,
+          },
         },
-        second: { template: 'x-auth:Bearer ${token}' }, // Example custom template
       },
-    },
-    needs: {
-      settings: {
-        loader: true,
-        waitRequest: false // если запрос пошел до получения токена, то ждать токена и ответ | не ждать и сразу получить отрицательный ответ
-      },
-    },
-    cache: {
-      settings: {
-        place: 'localStorage',
-        prefix: 'admin--cache' // по умолчанию prefix = 'cache'
-      },
-    },
-    messages: {
-      codes: {
-        '503;504': { // перечисление статусов через ";"
-          title: 'Внутренняя ошибка сервера', // набор полей можно расширить в OverridableNotificationsSendData
-          text: 'Попробуйте позже.',
+      namedRequests: {
+        getTasks: {
+          request: (quantity: number) => ({
+            url: 'https://test.com/' + quantity,
+            method: 'GET',
+            tokenName: 'main',
+          }),
+          validation: (dataJson, response): dataJson is RM['getTasks']['success'] =>
+            !!response?.ok && typeof dataJson === 'object',
+          mock: (input, init) => {
+            const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+            const quantity = Number(url.split('/').reverse()[0]);
+            return new Response(
+              JSON.stringify({
+                data: [
+                  { type: 'backlog', text: 'task1' },
+                  { type: 'done', text: 'tsak2' },
+                ],
+                quantity,
+              }),
+              {
+                status: 200,
+                statusText: 'OK',
+              },
+            );
+          },
+          store: {
+            key: 'tasks',
+            default: { backlog: [], done: [] },
+            converter: ({ state, validData }) => {
+              const { backlog, done } = Object.groupBy(validData.data, ({ type }) => type);
+              return { backlog: backlog?.map(({ text }) => text) || [], done: done?.map(({ text }) => text) || [] };
+            },
+            validation: (data): data is Store[RM['getTasks']['storeKey']] =>
+              !!data && typeof data === 'object' && 'backlog' in data && 'done' in data,
+            cache: { maxAge: 0, place: 'sessionStorage' },
+            empty: (value) => value.backlog.length === 0 && value.done.length === 0,
+          },
+          afterRequest: ({ response, input }) => {
+            if (!response.ok) return;
+            requestManager
+              .getModule('notifications')
+              .send({ data: { text: 'Данные успешно получены.' }, type: 'success' });
+          },
         },
-        402: {
-          text: 'errors.error402',
-          action: 'Перейти к оплате'
+        getZero: {
+          request: () => ({
+            url: 'https://test.com/',
+            method: 'GET',
+            tokenName: 'main',
+          }),
+          store: {
+            key: 'zero',
+            default: false,
+          },
         },
-        default: {
-          title: 'Ошибка {{errorCode}}',
+        postAuth: () => ({
+          url: 'https://test.com/',
+          method: 'GET',
+          tokenName: 'main',
+        }),
+      },
+      messages: {
+        codes: {
+          403: {
+            title: 'errors.error403',
+          },
+          default: {
+            title: 'errors.errorTitle',
+          },
         },
-        // Для ошибки 503 будет: { title: 'Внутренняя ошибка сервера', text: 'Попробуйте позже.' } 
-        // Для ошибки 402 будет: { text: 'errors.error402', action: 'Перейти к оплате', title: 'Ошибка {{errorCode}}' } 
-        // Для ошибки 400 будет: { title: 'Ошибка {{errorCode}}' }
       },
-    },
-    notifications: {
-      settings: {
-        duplicate: false, // разрешить дубликаты сообщений (по контенту). Помогает при излишнем перерендере
-        sticky: true, // true - пользователь должен сам закрыть сообщение | false - закрыть по таймеру
-        duration: 3 // время таймера в сек
-      },
-    },
-  },
 });
 ```
 
@@ -301,14 +276,12 @@ export const App: React.FC = () => {
 *Loader.tsx*
 ```tsx
 import * as React from 'react';
-import { LoaderStore } from 'library-react-hooks';
+import requestManager from '../api';
 
 import { LoaderComponent, LoaderComponentProps } from 'src/components';
 
 export const Loader: React.FC<LoaderComponentProps> = (props) => {
-  const { active } = React.useSyncExternalStore(LoaderStore.on, LoaderStore.st); // react v >= 18
-  // const active = LoaderStore.useSubscribe((state) => state.active) // react v < 18
-  // const { active } = useLoader();
+  const { active } = React.useSyncExternalStore(requestManager.connectLoader.subscribe, requestManager.connectLoader.state); // react v >= 18
 
   if (!active) return null;
 
@@ -340,20 +313,20 @@ export const App: React.FC = () => {
 *Notifications.tsx*
 ```tsx
 import * as React from 'react';
-import { useNotifications } from 'library-react-hooks';
+import requestManager from '../api';
 import { useTranslation } from 'react-i18next';
 import { Alert, AlertTitle } from '@mui/material';
 
 // For test notification view
-// NotificationsStore.send({ data: { title: 'My title', text: 'Descr' } });
+// requestManager.sendNotification({ data: { title: 'My title', text: 'Descr' } });
 
 export const Notifications: React.FC = () => {
-  const { notifications, drop } = useNotifications();
+  const notifications = React.useSyncExternalStore(requestManager.connectNotifications.subscribe, requestManager.connectNotifications.state); // react v >= 18
   const { t } = useTranslation();
 
   return (
     <div>
-      {notifications.map(({ id, type, data, response, dataJson }) => (
+      {notifications.map(({ id, type, data, response, drop }) => (
         <Alert
           key={id}
           severity={type}
@@ -363,7 +336,6 @@ export const Notifications: React.FC = () => {
         >
           <AlertTitle>{t(data?.title || '', { errorCode: response?.status || '' })}</AlertTitle>
           {data?.text ? t(data.text) : null}
-          {dataJson?.message?.toString() || null}
         </Alert>
       ))}
     </div>
@@ -374,7 +346,7 @@ export const Notifications: React.FC = () => {
 ### Use <a name = "use"></a>
 *auth.hook.ts*
 ```ts
-import { HttpsStore, SettingsStore } from 'library-react-hooks';
+import requestManager from '../api';
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -384,16 +356,16 @@ export const useAuth = () => {
   return {
     login: React.useCallback(
       async (props: { email: string; password: string }) => {
-        const { dataJson, validation, response } = await HttpsStore.namedRequest('postAuth', props);
-        if (validation?.(dataJson, response)) {
-          HttpsStore.setToken('main', dataJson.token);
+        const { validData } = await requestManager.namedRequest('postAuth', props);
+        if (validData) {
+          requestManager.setToken('main', validData.token);
           navigate('/dashboard');
         }
       },
       [navigate],
     ),
     logout: React.useCallback(() => {
-      SettingsStore.restart();
+      requestManager.restart();
       navigate('/');
     }, [navigate]),
   };
@@ -426,16 +398,20 @@ import * as React from 'react';
 import { ITask } from 'src/types';
 
 export const TasksPage: React.FC = () => {
+  const { tasks } = React.useSyncExternalStore(requestManager.subscribe, requestManager.state); // react v >= 18
+  React.useEffect(() => {
+    requestManager.needAction('tasks', NeedsActionTypes.request, 1);
+  }, []);
   const { store } = useNeeds(['tasks']); // GET укажите какие данные нужно подгрузить на этой странице
 
   const onAdd = React.useCallback(async (task: Omit<ITask, 'id'>) => {
-    await HttpsStore.namedRequest('postTask', task); // POST, PUT, PATCH
-    ScenariosStore.after('postTask'); // ответ можно обработать тут или вызвать сценарии
+    await requestManager.namedRequest('postTask', task); // POST, PUT, PATCH
+    // ответ можно обработать тут или в afterRequest
   }, []);
 
   const freeRequest = async () => {
-    const { dataJson, response } = await HttpsStore.request('https://test.com/3', { body: { text: 'test' }, settings: { loader: true } });
-    if (response?.ok && dataJson) {
+    const { dataJson, response } = await requestManager.getModule('request').fetch('https://test.com/3');
+    if (response?.ok) {
       // do something
     } else {}
   };

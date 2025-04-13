@@ -137,7 +137,7 @@ class Https<T extends TTokenNames, H extends THttpsBase<T>, N extends TNotificat
 
     const message = this.#modules.messages.parse(response);
     if (message && (fetchData.settings?.notifications ?? this.#settings.notifications))
-      this.#modules.notifications.send({ data: message[0], type: message[1] });
+      this.#modules.notifications.send({ data: message[0], type: message[1], response });
 
     const validData = config.validation(data, response);
     if (validData) config.afterRequest({ input, response });
