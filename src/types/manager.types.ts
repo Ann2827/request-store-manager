@@ -22,7 +22,6 @@ import type {
   TTokenTemplate,
 } from './modules';
 
-// type Single<T extends object> = LengthObject<T>['length'] extends 1 ? T : never;
 export interface Template<T extends TTokenNames, S extends TStoreBase> {
   // args?: any[];
   fn: (...args: any) => IHttpsRequest<T>;

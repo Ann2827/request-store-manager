@@ -6,9 +6,6 @@ export type TNeedsBase<T extends TTokenNames, S extends TStoreBase, H extends TH
   keyof S,
   keyof H | undefined
 >;
-// export type TNeedsBase<T extends TTokenNames, S extends TStoreBase, H extends THttpsBase<T>> = {
-//   [K in keyof S]: keyof H;
-// };
 
 export enum NeedsActionTypes {
   /**
@@ -31,9 +28,5 @@ export type TNeedsItem<T extends TTokenNames, H extends THttpsBase<T>, V> = {
   converter?: TNeedsConverterFn<V, H[keyof H][1]>;
 };
 export type INeedsConfig<T extends TTokenNames, H extends THttpsBase<T>, S extends TStoreBase> = {
-  //   map: { [K in keyof S]: keyof H };
-  //   converters?: {
-  //     [K in keyof S]?: TNeedsConverterFn<S[K], H[keyof H][1]>;
-  //   };
   [K in keyof S]: TNeedsItem<T, H, S[K]>;
 };

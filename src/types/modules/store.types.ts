@@ -1,4 +1,3 @@
-// export type TStoreBase = { [key: string]: unknown };
 export type TStoreBase = Record<PropertyKey, unknown>;
 
 export type TStoreValidationFn<V extends TStoreBase[keyof TStoreBase]> = (payload: unknown) => payload is V;

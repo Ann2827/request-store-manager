@@ -7,7 +7,6 @@ import Cache from './Cache';
 export const MODULE_NAME = 'cacheStrict';
 
 /**
- * FIXME: Заместитель (почти)
  * Модуль работает только с ключами, указанными в конфиге.
  */
 class CacheStrict<C extends TCacheNames> extends Cache implements IModule {

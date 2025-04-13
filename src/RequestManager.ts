@@ -21,9 +21,6 @@ import type {
 import { NeedsAdapter, StoreAdapter, TokenAdapter } from './core/adapters';
 import { IsFullConfig } from './modules/Https';
 
-/**
- * FIXME: Фасад -> Компоновщик
- */
 class RequestManager<
   T extends TTokenNames,
   S extends TStoreBase,
