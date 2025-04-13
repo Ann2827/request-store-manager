@@ -1,0 +1,44 @@
+{
+  "compilerOptions": {
+    "outDir": "dist",
+    "module": "esnext",
+    "target": "es2024",
+    "lib": [
+      "dom",
+      "esnext"
+    ],
+    "allowJs": true,
+    "checkJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "Node",
+    "declaration": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "@core": [
+        "./src/core"
+      ],
+      "@modules": [
+        "./src/modules"
+      ],
+      "@types": [
+        "./src/types"
+      ],
+      "@utils": [
+        "./src/utils"
+      ]
+    },
+  },
+  "include": [
+    "src", "__tests__", "__mocks__"
+  ],
+  "exclude": [
+    // "__mocks__",
+    ".plop",
+    // "*.config.*"
+  ]
+}
