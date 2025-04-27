@@ -21,7 +21,7 @@ export type TStoreConfig<S extends TStoreBase> = {
    * Какое значение считать пустым? Используется, как правило полученя кэша. Если значение пустое, то пробуем достать из кэша.
    * @default (value) => !value
    */
-  empty?: {
+  isEmpty?: {
     [K in keyof S]?: TStoreEmptyFn<S[K]>;
   };
 };

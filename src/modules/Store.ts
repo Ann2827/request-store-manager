@@ -21,7 +21,7 @@ class Store<S extends TStoreBase> extends Context<S> implements IModule {
   readonly #validation: { [K in keyof S]: TStoreValidationFn<S[K]> };
   // readonly #validation: Record<keyof S, TStoreValidationFn<S[keyof S]>>;
 
-  readonly #empty: { [K in keyof S]: TStoreEmptyFn<S[K]> };
+  readonly #isEmpty: { [K in keyof S]: TStoreEmptyFn<S[K]> };
 
   readonly #modules: TStateModules<keyof Partial<S>>;
 
@@ -45,7 +45,7 @@ class Store<S extends TStoreBase> extends Context<S> implements IModule {
     );
     const filledEmpty = fillObject<S, { [K in keyof S]: TStoreEmptyFn<S[K]> }>(
       config.initialState,
-      (_, key) => config?.empty?.[key] || ((value: S[typeof key]): boolean => !value),
+      (_, key) => config?.isEmpty?.[key] || ((value: S[typeof key]): boolean => !value),
     );
 
     const name = settings?.name || MODULE_NAME;
@@ -57,7 +57,7 @@ class Store<S extends TStoreBase> extends Context<S> implements IModule {
     });
 
     this.#validation = filledValidation;
-    this.#empty = filledEmpty;
+    this.#isEmpty = filledEmpty;
     this.#modules = { ...modules };
     this.#namedLogger = namedLogger;
   }
@@ -82,7 +82,7 @@ class Store<S extends TStoreBase> extends Context<S> implements IModule {
   }
 
   public isEmpty<K extends keyof S = keyof S>(key: K, value: S[K]): boolean {
-    return this.#empty[key](value);
+    return this.#isEmpty[key](value);
   }
 
   public get<K extends keyof S = keyof S>(key: K): S[K] {

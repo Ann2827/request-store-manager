@@ -3,7 +3,7 @@ type Params<T extends (...args: any) => any> = T extends (a: any, ...args: infer
 export type NamedLogger = ReturnType<Logger['named']>;
 
 function styledTitle(text: string, colored = false): [string, string] {
-  return ['%c' + text, 'font-weight: bold;' + colored ? 'color: blue' : ''];
+  return ['%c' + text, 'font-weight: bold;' + colored ? 'color: blue;' : ''];
 }
 
 function table(diff: [string, string][]) {
@@ -32,13 +32,13 @@ class Logger {
   public state(name: string, prev: unknown, next: unknown, diff: [string, string][], listeners?: number): void {
     if (!this.#logsOn) return;
 
-    console.log(styledTitle(`Module: ${name}.`, true), 'State has changed');
+    console.log(...styledTitle(`Module: ${name}.`, true), 'State has changed');
     console.table(table(diff));
 
     console.groupCollapsed('Advanced info');
     console.log('Prev state:', prev);
     console.log('Next state:', next);
-    if (listeners !== undefined) console.log('Active listeners:', styledTitle(listeners.toString()));
+    if (listeners !== undefined) console.log('Active listeners:', ...styledTitle(listeners.toString()));
     console.groupEnd();
   }
 
@@ -49,11 +49,11 @@ class Logger {
     if (!this.#logsOn) return;
 
     if (!description) {
-      console.log(styledTitle(`Module: ${name}.`, true), message);
+      console.log(...styledTitle(`Module: ${name}.`, true), message);
       return;
     }
 
-    console.groupCollapsed(styledTitle(`Module: ${name}.`, true), message);
+    console.groupCollapsed(...styledTitle(`Module: ${name}.`, true), message);
     console.log(description);
     console.groupEnd();
   }
@@ -63,7 +63,7 @@ class Logger {
    * @param name - название модуля
    */
   public warn(name: string, message: string): void {
-    console.warn(styledTitle(`Module: ${name}.`), message);
+    console.warn(...styledTitle(`Module: ${name}.`), message);
   }
 
   /**
@@ -71,7 +71,7 @@ class Logger {
    * @param name - название модуля
    */
   public error(name: string, message: string): void {
-    console.error(styledTitle(`Module: ${name}.`), message);
+    console.error(...styledTitle(`Module: ${name}.`), message);
   }
 
   /**

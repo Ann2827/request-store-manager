@@ -3,10 +3,12 @@ import { convertQuery, fillObject } from '@utils';
 
 import type {
   IHttpsConfig,
+  IHttpsRequest,
   IModule,
   THttpsBase,
   THttpsConfigNamedRequest,
   THttpsSettings,
+  THttpsValidationAdapter,
   TNotificationsBase,
   TTokenNames,
 } from '@types';
@@ -16,6 +18,7 @@ import Token from './Token';
 import Loader from './Loader';
 import Messages from './Messages';
 import Notifications from './Notifications';
+import Validation from './Validation';
 
 type THttpsModules<T extends TTokenNames, N extends TNotificationsBase> = {
   request: Request;
@@ -36,13 +39,20 @@ export const MODULE_NAME = 'https';
 class Https<T extends TTokenNames, H extends THttpsBase<T>, N extends TNotificationsBase = TNotificationsBase>
   implements IModule
 {
-  readonly #config: { [K in keyof H]: Required<THttpsConfigNamedRequest<T, H, K>> };
+  readonly #config: { [K in keyof H]: THttpsConfigNamedRequest<T, H, K> };
 
   readonly #modules: THttpsModules<T, N>;
 
   readonly #settings: THttpsSettings;
 
+  readonly #validation: Validation<[Response, IHttpsRequest<T>], THttpsValidationAdapter<T, H>>;
+
   readonly #namedLogger?: NamedLogger;
+
+  #getFetchData<Name extends keyof H>(name: Name, ...args: Parameters<H[Name][0]>): IHttpsRequest<T> {
+    const config = this.#config[name];
+    return config.request(...args);
+  }
 
   constructor(
     config: IHttpsConfig<T, H>,
@@ -58,27 +68,24 @@ class Https<T extends TTokenNames, H extends THttpsBase<T>, N extends TNotificat
     };
     this.#modules = modules;
     this.#namedLogger = logger?.named(MODULE_NAME);
-    const defaultValidationFn = (d: unknown, _r: Response): d is H[keyof H][1] => true;
-    this.#config = fillObject<IHttpsConfig<T, H>, { [K in keyof H]: Required<THttpsConfigNamedRequest<T, H, K>> }>(
+    this.#config = fillObject<IHttpsConfig<T, H>, { [K in keyof H]: THttpsConfigNamedRequest<T, H, K> }>(
       config,
       (value, key) =>
         IsFullConfig<T, H, typeof key>(value)
-          ? {
-              request: value.request,
-              validation: value?.validation
-                ? (d, r): d is H[keyof H][1] => {
-                    const valid = value.validation!(d, r);
-                    if (!valid) this.#namedLogger?.error(`Not valid`);
-                    return valid;
-                  }
-                : defaultValidationFn,
-              afterRequest: value?.afterRequest || (() => {}),
-            }
+          ? value
           : {
               request: value as H[typeof key][0],
-              validation: defaultValidationFn,
-              afterRequest() {},
             },
+    );
+    this.#validation = new Validation<[Response, IHttpsRequest<T>], THttpsValidationAdapter<T, H>>(
+      fillObject<IHttpsConfig<T, H>, THttpsValidationAdapter<T, H>>(config, (value, key) =>
+        IsFullConfig<T, H, typeof key>(value) && value.parse
+          ? {
+              ...value.parse,
+            }
+          : {},
+      ),
+      logger,
     );
   }
 
@@ -89,9 +96,14 @@ class Https<T extends TTokenNames, H extends THttpsBase<T>, N extends TNotificat
   public async namedRequest<Name extends keyof H>(
     name: Name,
     ...args: Parameters<H[Name][0]>
-  ): Promise<{ response: Response; validData: H[Name][1] | null; data: unknown }> {
-    const config = this.#config[name];
-    const fetchData = config.request(...args);
+  ): Promise<{
+    response: Response;
+    validData: H[Name][1] | null;
+    data: unknown;
+    validError: H[Name][2] | null;
+    fetchData: IHttpsRequest<T>;
+  }> {
+    const fetchData = this.#getFetchData<Name>(name, ...args);
 
     if (fetchData.settings?.loader ?? this.#settings.loader) this.#modules.loader.activate();
 
@@ -115,7 +127,9 @@ class Https<T extends TTokenNames, H extends THttpsBase<T>, N extends TNotificat
             statusText: 'Unauthorized',
           }),
           validData: null,
+          validError: null,
           data: {},
+          fetchData,
         };
       }
       headers.append(...authHeader);
@@ -132,19 +146,19 @@ class Https<T extends TTokenNames, H extends THttpsBase<T>, N extends TNotificat
         input.searchParams.append(key, value);
       });
     }
-    const response = await this.#modules.request.fetch(input, { ...fetchData.init, body, headers }, name.toString());
+    const init = { ...fetchData.init, body, headers };
+    const response = await this.#modules.request.fetch(input, init, name.toString());
     const data = await ResponseFactory.parse(this.#settings.contentType, response);
 
     const message = this.#modules.messages.parse(response);
     if (message && (fetchData.settings?.notifications ?? this.#settings.notifications))
       this.#modules.notifications.send({ data: message[0], type: message[1], response });
 
-    const validData = config.validation(data, response);
-    if (validData) config.afterRequest({ input, response, validData });
+    const { validData, validError } = this.#validation.parse<Name>(name, data, response, fetchData);
 
     if (fetchData.settings?.loader ?? this.#settings.loader) this.#modules.loader.determinate();
 
-    return { response, validData: validData ? data : null, data };
+    return { response, validData, data, validError, fetchData };
   }
 }
 

@@ -41,6 +41,24 @@ export const fillObject = <T extends Record<PropertyKey, unknown>, V extends Rec
       fn(value, key),
     ]),
   ) as { [K in keyof T]: V[K] };
+export const fillFilterObject = <T extends Record<PropertyKey, unknown>, V extends { [K in keyof T]?: unknown }>(
+  obj: T,
+  fn: <K extends keyof T = keyof T>(value: T[K], key: K) => V[K],
+): Exclude<{ [K in keyof T]?: V[K] }, undefined> =>
+  Object.fromEntries(
+    (Object.entries(obj) as [keyof T, T[keyof T]][])
+      .map<[keyof T, V[keyof T]]>(([key, value]) => [key, fn(value, key)])
+      .filter(([_, value]) => value !== undefined),
+  ) as Exclude<{ [K in keyof T]?: V[K] }, undefined>;
+export const fillFilterObject2 = <T extends Record<PropertyKey, unknown>, V extends { [K in keyof T]: unknown }>(
+  obj: T,
+  fn: <K extends keyof T = keyof T>(value: T[K], key: K) => V[K] | undefined,
+): Exclude<V, undefined> =>
+  Object.fromEntries(
+    (Object.entries(obj) as [keyof T, T[keyof T]][])
+      .map<[keyof T, V[keyof T] | undefined]>(([key, value]) => [key, fn(value, key)])
+      .filter(([_, value]) => value !== undefined),
+  ) as Exclude<V, undefined>;
 
 /**
  * Возвращает тело функции в виде строки

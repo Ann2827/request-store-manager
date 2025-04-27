@@ -48,7 +48,7 @@ class Token<T extends TTokenNames> extends Store<Record<T, TTokenValue>> impleme
     const initialState = fillObject<TTokenConfig<T>, Record<T, TTokenValue>>(config, () => null);
     const validation = fillObject<TTokenConfig<T>, Record<T, typeof IsToken>>(config, () => IsToken);
     const empty = fillObject<TTokenConfig<T>, Record<T, TStoreEmptyFn<TTokenValue>>>(config, () => IsEmpty);
-    super({ initialState, validation, empty }, { cache: modules?.cache }, { name: MODULE_NAME }, logger);
+    super({ initialState, validation, isEmpty: empty }, { cache: modules?.cache }, { name: MODULE_NAME }, logger);
 
     this.#config = config;
     this.#settings = {

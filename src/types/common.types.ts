@@ -80,11 +80,6 @@ export type Invert<O extends Record<keyof O, Value>, Value extends PropertyKey =
       >
     >
   : never;
-export type Invert2<O extends Record<keyof O, Value>, Value extends PropertyKey = PropertyKey> = UnionToIntersection<
-  {
-    [K in keyof O]: Record<O[K], K>;
-  }[keyof O]
->;
 
 /**
  * https://github.com/millsp/ts-toolbelt/blob/master/sources/Object/Select.ts
@@ -124,3 +119,4 @@ export type Last<U> =
     : never; // ^^^ Last parameter
 
 export type NoStringIndex<T> = { [K in keyof T as string extends K ? never : K]: T[K] };
+export type OnlyStringIndex<T> = { [K in keyof T as PropertyKey extends K ? never : string]: T[K] };

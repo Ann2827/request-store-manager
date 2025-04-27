@@ -4,10 +4,9 @@ import { NeedsActionTypes } from '@types';
 
 import type {
   IModule,
-  INeedsConfig,
+  TConserveBase,
   THttpsBase,
   TNeedsBase,
-  TNeedsItem,
   TNotificationsBase,
   TStoreBase,
   TTokenNames,
@@ -15,51 +14,44 @@ import type {
 
 import Store from './Store';
 import Https from './Https';
+import Conserve from './Conserve';
 
 export type TNeedsModules<
   T extends TTokenNames,
   H extends THttpsBase<T>,
   S extends TStoreBase,
   N extends TNotificationsBase,
+  C extends TConserveBase<T, H, S>,
 > = {
   https: Https<T, H, N>;
   store: Store<S>;
+  conserve: Conserve<T, H, S, C>;
 };
 
 export const MODULE_NAME = 'needs';
 
 class Needs<
     T extends TTokenNames,
-    S extends TStoreBase,
     H extends THttpsBase<T>,
+    S extends TStoreBase,
     N extends TNotificationsBase,
+    C extends TConserveBase<T, H, S>,
     L extends TNeedsBase<T, S, H>,
   >
   extends Store<Record<keyof S, null | boolean>>
   implements IModule
 {
-  readonly #config: {
-    [K in keyof S]: Required<TNeedsItem<T, H, S[K]>>;
-  };
+  readonly #config: L;
 
-  readonly #modules: TNeedsModules<T, H, S, N>;
-
-  // readonly #settings: TNeedsSettings;
+  readonly #modules: TNeedsModules<T, H, S, N, C>;
 
   readonly #namedLogger?: NamedLogger;
 
-  constructor(config: INeedsConfig<T, H, S>, modules: TNeedsModules<T, H, S, N>, logger?: Logger) {
+  constructor(config: L, modules: TNeedsModules<T, H, S, N, C>, logger?: Logger) {
     const store = fillObject<S, Record<keyof S, null>>(modules.store.state, () => null);
     super({ initialState: store }, {}, { name: MODULE_NAME }, logger);
-    // this.#settings = config.settings;
     this.#modules = modules;
-    this.#config = fillObject<INeedsConfig<T, H, S>, { [K in keyof S]: Required<TNeedsItem<T, H, S[K]>> }>(
-      config,
-      (value, key) => ({
-        requestName: value.requestName,
-        converter: value.converter ?? (({ validData }) => validData as S[typeof key]),
-      }),
-    );
+    this.#config = { ...config };
     this.#namedLogger = logger?.named(MODULE_NAME);
   }
 
@@ -68,7 +60,7 @@ class Needs<
     Object.values(this.#modules).forEach((module) => module.restart()); // TODO: нужно ли это делать? При общем использовании и при частичном
   }
 
-  public async action<Name extends keyof S = keyof S>(
+  public async action<Name extends keyof L = keyof L>(
     name: Name,
     type: NeedsActionTypes = NeedsActionTypes.request,
     ...args: Parameters<L[Name] extends keyof H ? H[L[Name]][0] : () => void>
@@ -85,11 +77,17 @@ class Needs<
       }
     }
 
-    const { validData } = await this.#modules.https.namedRequest(this.#config[name].requestName, ...args);
+    const requestName = this.#config[name];
+    if (!requestName) {
+      this.#namedLogger?.message(`Request name for ${name.toString()} not found.`);
+      return;
+    }
+
+    const { validData, fetchData } = await this.#modules.https.namedRequest(requestName, ...args);
 
     if (validData) {
       super.set(name, () => true);
-      this.#modules.store.set(name, (prev) => this.#config[name].converter({ state: prev, validData }));
+      this.#modules.conserve.save(requestName, validData, fetchData);
     } else {
       // this.#modules.store.set(name, () => null);
       super.set(name, () => false);

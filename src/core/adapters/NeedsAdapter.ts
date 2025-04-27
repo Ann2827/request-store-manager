@@ -1,10 +1,14 @@
 import { Needs } from '@modules';
+import { fillFilterObject, fillFilterObject2, fillObject } from '@utils';
 
 import type {
   IManagerConfig,
-  INeedsConfig,
+  NoStringIndex,
   RequestManagerBase,
+  SelectKeys,
+  TConserveAdapter,
   THttpsAdapter,
+  TManagerStore,
   TNeedsAdapter,
   TNotificationsBase,
   TStoreBase,
@@ -13,7 +17,7 @@ import type {
 
 import Logger from '../Logger';
 
-import { IsFullRequestConfig } from './functions';
+import { IsFullStoreConfig } from './functions';
 
 import type { TNeedsModules } from '../../modules/Needs';
 
@@ -22,20 +26,20 @@ class NeedsAdapter<
   S extends TStoreBase,
   RM extends RequestManagerBase<T, S>,
   N extends TNotificationsBase,
-> extends Needs<T, S, THttpsAdapter<T, S, RM>, N, TNeedsAdapter<T, S, RM>> {
+> extends Needs<T, THttpsAdapter<T, S, RM>, S, N, TConserveAdapter<T, S, RM>, TNeedsAdapter<T, S, RM>> {
   constructor(
     config: IManagerConfig<T, S, RM, N>,
-    modules: TNeedsModules<T, THttpsAdapter<T, S, RM>, S, N>,
+    modules: TNeedsModules<T, THttpsAdapter<T, S, RM>, S, N, TConserveAdapter<T, S, RM>>,
     logger: Logger,
   ) {
-    const needsConfig = Object.entries(config.namedRequests).reduce<INeedsConfig<T, THttpsAdapter<T, S, RM>, S>>(
-      (prev, [hKey, value]) => {
-        if (IsFullRequestConfig<T, S, RM, typeof hKey>(value) && value.store)
-          return { ...prev, [value.store.key]: { requestName: hKey, converter: value.store.converter } };
-        return prev;
-      },
-      {} as INeedsConfig<T, THttpsAdapter<T, S, RM>, S>,
-    );
+    const needsConfig: TNeedsAdapter<T, S, RM> = fillFilterObject2<
+      { [K in keyof S]: TManagerStore<T, S, RM, K> | S[K] },
+      TNeedsAdapter<T, S, RM>
+      // { [K in keyof S]: SelectKeys<NoStringIndex<RM>, { storeKey: keyof S }, 'contains->'> }
+    >(config.store, (value, key) => {
+      const is = IsFullStoreConfig<T, S, RM, typeof key>(value);
+      return is ? value?.autoRequest : undefined;
+    });
     super(needsConfig, modules, logger);
   }
 }

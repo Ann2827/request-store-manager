@@ -7,3 +7,5 @@ export * from './notifications.types';
 export * from './cache.types';
 export * from './https.types';
 export * from './needs.types';
+export * from './validation.types';
+export * from './conserve.types';

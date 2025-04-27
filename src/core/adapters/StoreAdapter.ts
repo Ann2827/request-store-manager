@@ -2,11 +2,10 @@ import { CacheStrict, Store } from '@modules';
 import { fillObject } from '@utils';
 
 import type {
-  IManagerConfig,
   RequestManagerBase,
   TCacheOptions,
+  TCacheSettings,
   TManagerStore,
-  TNotificationsBase,
   TStoreBase,
   TStoreEmptyFn,
   TStoreValidationFn,
@@ -15,54 +14,39 @@ import type {
 
 import Logger from '../Logger';
 
-import { IsFullRequestConfig } from './functions';
+import { IsFullStoreConfig } from './functions';
 
-type TGetRequestSuccessByStoreKey<
-  T extends TTokenNames,
-  S extends TStoreBase,
-  RM extends RequestManagerBase<T, S>,
-  Key extends keyof S,
-> = { [K in keyof RM]-?: Key extends RM[K]['storeKey'] ? RM[K]['success'] : never }[keyof RM];
-
-type TStoreTemplate<T extends TTokenNames, S extends TStoreBase, RM extends RequestManagerBase<T, S>> = {
-  [K in keyof S]: TManagerStore<S, K, TGetRequestSuccessByStoreKey<T, S, RM, K>>; // | THttpsBaseSuccess
+type TStoreOriginalConfig<T extends TTokenNames, S extends TStoreBase, RM extends RequestManagerBase<T, S>> = {
+  [K in keyof S]: TManagerStore<T, S, RM, K> | S[K];
 };
 
-class StoreAdapter<
-  T extends TTokenNames,
-  S extends TStoreBase,
-  RM extends RequestManagerBase<T, S>,
-  N extends TNotificationsBase,
-> extends Store<S> {
-  constructor(config: IManagerConfig<T, S, RM, N>, logger: Logger) {
-    const store: TStoreTemplate<T, S, RM> = Object.entries(config.namedRequests).reduce<TStoreTemplate<T, S, RM>>(
-      (prev, [hKey, request]) => {
-        if (IsFullRequestConfig<T, S, RM, typeof hKey>(request) && request?.store)
-          return { ...prev, [request.store.key]: request.store };
-        return prev;
-      },
-      {} as TStoreTemplate<T, S, RM>,
-    );
-
+class StoreAdapter<T extends TTokenNames, S extends TStoreBase, RM extends RequestManagerBase<T, S>> extends Store<S> {
+  constructor(
+    store: TStoreOriginalConfig<T, S, RM>,
+    cacheSettings: Partial<Omit<TCacheSettings, 'postfix'>> | undefined,
+    logger: Logger,
+  ) {
     super(
       {
-        initialState: fillObject<TStoreTemplate<T, S, RM>, { [K in keyof S]: S[K] }>(store, (value) => value?.default),
-        validation: fillObject<TStoreTemplate<T, S, RM>, { [K in keyof S]: TStoreValidationFn<S[K]> | undefined }>(
-          store,
-          (value) => value?.validation,
+        initialState: fillObject<TStoreOriginalConfig<T, S, RM>, S>(store, (value, key) =>
+          IsFullStoreConfig<T, S, RM, typeof key>(value) ? value.default : (value as S[typeof key]),
         ),
-        empty: fillObject<TStoreTemplate<T, S, RM>, { [K in keyof S]: TStoreEmptyFn<S[K]> | undefined }>(
+        validation: fillObject<
+          TStoreOriginalConfig<T, S, RM>,
+          { [K in keyof S]: TStoreValidationFn<S[K]> | undefined }
+        >(store, (value, key) => (IsFullStoreConfig<T, S, RM, typeof key>(value) ? value?.validation : undefined)),
+        isEmpty: fillObject<TStoreOriginalConfig<T, S, RM>, { [K in keyof S]: TStoreEmptyFn<S[K]> | undefined }>(
           store,
-          (value) => value?.empty,
+          (value, key) => (IsFullStoreConfig<T, S, RM, typeof key>(value) ? value?.isEmpty : undefined),
         ),
       },
       {
         cache: new CacheStrict<keyof typeof store>(
-          fillObject<TStoreTemplate<T, S, RM>, { [K in keyof S]: TCacheOptions | boolean }>(
+          fillObject<TStoreOriginalConfig<T, S, RM>, { [K in keyof S]: TCacheOptions | boolean }>(
             store,
-            (value) => value?.cache ?? false,
+            (value, key) => (IsFullStoreConfig<T, S, RM, typeof key>(value) ? value?.cache || false : false),
           ),
-          { ...config.settings?.cache, postfix: 'store' },
+          { ...cacheSettings, postfix: 'store' },
           logger,
         ),
       },
