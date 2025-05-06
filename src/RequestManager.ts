@@ -3,13 +3,12 @@ import { Logger } from '@core';
 import { NeedsActionTypes } from '@types';
 
 import type {
-  CheckRM,
+  // CheckRM,
   IManagerConfig,
   IManagerModules,
   NoStringIndex,
   RequestManagerBase,
   THttpsAdapter,
-  TNeedsAdapter,
   TNotification,
   TNotificationsBase,
   TNotificationsSettings,
@@ -24,7 +23,8 @@ import { IsFullConfig } from './modules/Https';
 class RequestManager<
   T extends TTokenNames,
   S extends TStoreBase,
-  RM extends CheckRM<T, S, RequestManagerBase<T, S>>,
+  RM extends RequestManagerBase<T, S>,
+  // RM extends CheckRM<T, S, RequestManagerBase<T, S>>,
   N extends TNotificationsBase = TNotificationsBase,
 > {
   readonly #modules: IManagerModules<T, S, RM, N>;
@@ -50,7 +50,6 @@ class RequestManager<
         },
       },
       config.settings?.request,
-      logger,
     );
 
     // Combain modules
@@ -119,11 +118,7 @@ class RequestManager<
   public async needAction<Name extends keyof S = keyof S>(
     name: Name,
     type: NeedsActionTypes = NeedsActionTypes.request,
-    ...args: Parameters<
-      TNeedsAdapter<T, S, RM>[Name] extends keyof RM
-        ? THttpsAdapter<T, S, RM>[TNeedsAdapter<T, S, RM>[Name]][0]
-        : () => void
-    >
+    ...args: Parameters<THttpsAdapter<T, S, RM>[Name][0]>
   ): Promise<void> {
     return this.#modules.needs.action<Name>(name, type, ...args);
   }
@@ -134,7 +129,7 @@ class RequestManager<
     return this.#modules.notifications.send(props);
   }
 
-  public subscribe(fn: TSubscribeFn<S>): () => void {
+  public subscribe(fn?: TSubscribeFn<S>): () => void {
     return this.#modules.store.subscribe(fn);
   }
 

@@ -76,7 +76,7 @@ describe('Timer class:', () => {
       expect(state).toBeTruthy();
     });
     await new Promise((resolve) => {
-      const clearTimer = timerModule.setTimer('test1', 5, {
+      const clearTimer = timerModule.setTimer('test1', 3, {
         observe: true,
       });
       clearTimer();

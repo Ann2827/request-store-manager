@@ -26,6 +26,7 @@ interface THttps extends THttpsBase<TTokens> {
 }
 type TStore = {
   tasks: { quantity: number };
+  zero: boolean;
 };
 interface INeeds extends TNeedsBase<TTokens, TStore, THttps> {
   tasks: 'getTasks';
@@ -49,11 +50,11 @@ describe('Needs class:', () => {
     const timer = new Timer();
     token = new Token({ main: 'bearer' }, { timer });
     store = new Store<TStore>({
-      initialState: { tasks: { quantity: 0 } },
+      initialState: { tasks: { quantity: 0 }, zero: false },
       isEmpty: { tasks: ({ quantity }) => !quantity },
     });
     needs = new Needs<TTokens, THttps, TStore, TNotificationsBase, TConserve, INeeds>(
-      { tasks: 'getTasks' },
+      { tasks: 'getTasks', zero: undefined },
       {
         store,
         conserve: new Conserve<TTokens, THttps, TStore, TConserve>(

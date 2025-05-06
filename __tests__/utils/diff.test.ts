@@ -35,4 +35,10 @@ describe('utils diff: fn:', () => {
       ),
     ).toEqual([['a.f:', 'a.f:"f() {return false;}"']]);
   });
+
+  test('should be return diff for hard obj', () => {
+    expect(getDiff({ profile: null }, { profile: { email: 'test@mail.ru' } })).toEqual([
+      ['profile:null', 'profile:{"email":"test@mail.ru"}'],
+    ]);
+  });
 });

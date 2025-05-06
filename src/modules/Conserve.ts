@@ -38,6 +38,7 @@ class Conserve<T extends TTokenNames, H extends THttpsBase<T>, S extends TStoreB
 
   public restart() {
     Object.values(this.#modules).forEach((module) => module.restart());
+    this.#namedLogger?.restart();
   }
 
   public save<Name extends keyof H>(requestName: Name, validData: H[Name][1], fetchData: IHttpsRequest<T>) {

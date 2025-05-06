@@ -41,8 +41,8 @@ export type ReverseMap<T extends Record<keyof T, PropertyKey>> = {
  * @example Include<'key', 'key' | 'other', true> = true
  * @example { [K in Include<'key', 'key' | 'other']: any }
  */
-export type Include<Key extends PropertyKey, List extends PropertyKey, Value = true> =
-  Key extends Extract<List, Key> ? Value : never;
+export type Include<Key extends PropertyKey, Keys extends PropertyKey, Value = true> =
+  Key extends Extract<Keys, Key> ? Value : never;
 
 // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 export type ObjectRule<Key extends PropertyKey | never, Value> = {
@@ -106,6 +106,11 @@ export type SelectKeys<O extends object, M, Match extends MatchBase = 'default'>
   : never;
 export type Select<O extends object, M, Match extends MatchBase = 'default'> = Pick<O, SelectKeys<O, M, Match>>;
 
+export type CheckExtends<A1, A2, T, F> = {
+  1: T;
+  0: F;
+}[Extends<A1, A2>];
+
 /**
  * https://github.com/millsp/ts-toolbelt/blob/master/sources/Union/Last.ts
  */
@@ -120,3 +125,26 @@ export type Last<U> =
 
 export type NoStringIndex<T> = { [K in keyof T as string extends K ? never : K]: T[K] };
 export type OnlyStringIndex<T> = { [K in keyof T as PropertyKey extends K ? never : string]: T[K] };
+
+/**
+ * https://github.com/millsp/ts-toolbelt/blob/master/sources/Object/Has.ts
+ */
+type List<A = any> = ReadonlyArray<A>;
+type At<A, K extends PropertyKey> = A extends List
+  ? number extends A['length']
+    ? K extends number | `${number}`
+      ? A[never] | undefined
+      : undefined
+    : K extends keyof A
+      ? A[K]
+      : undefined
+  : unknown extends A
+    ? unknown
+    : K extends keyof A
+      ? A[K]
+      : undefined;
+export type Has<O extends object, K extends PropertyKey, M, Match extends MatchBase = 'default'> = Is<
+  At<O, K>,
+  M,
+  Match
+>;

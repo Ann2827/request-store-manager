@@ -53,6 +53,7 @@ class Store<S extends TStoreBase> extends Context<S> implements IModule {
     super(config.initialState, namedLogger);
 
     Object.entries(config.initialState).forEach(([key, value]) => {
+      if (filledEmpty[key](value as S[typeof key])) return;
       this.#validate(filledValidation[key], key, value);
     });
 
@@ -63,9 +64,9 @@ class Store<S extends TStoreBase> extends Context<S> implements IModule {
   }
 
   public restart() {
-    super.restart();
     // TODO: нужно ли это делать? При общем использовании и при частичном
-    Object.values(this.#modules).forEach((module) => module.restart());
+    Object.values(this.#modules).forEach((module) => module?.restart());
+    super.restart();
   }
 
   public set<K extends keyof S = keyof S>(key: K, fn: (prev: S[K]) => S[K]): void {
@@ -78,7 +79,7 @@ class Store<S extends TStoreBase> extends Context<S> implements IModule {
       return;
     }
 
-    this.#modules.cache?.set(key.toString(), value.toString());
+    this.#modules.cache?.set(key.toString(), value);
   }
 
   public isEmpty<K extends keyof S = keyof S>(key: K, value: S[K]): boolean {
@@ -93,6 +94,7 @@ class Store<S extends TStoreBase> extends Context<S> implements IModule {
     if (cacheValue === undefined) return value;
     if (this.#validate<K>(this.#validation[key], key, cacheValue)) {
       this.#namedLogger?.message(`${key.toString()} restored from cache.`);
+      this.set(key, () => cacheValue);
       return cacheValue;
     }
 

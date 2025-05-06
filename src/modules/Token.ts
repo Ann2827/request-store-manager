@@ -1,5 +1,5 @@
 import { fillObject, replace } from '@utils';
-import { Logger } from '@core';
+import { Logger, NamedLogger } from '@core';
 
 import type {
   IModule,
@@ -26,6 +26,8 @@ function IsEmpty(value: TTokenValue): boolean {
 }
 
 class Token<T extends TTokenNames> extends Store<Record<T, TTokenValue>> implements IModule {
+  readonly #namedLogger?: NamedLogger;
+
   readonly #config: TTokenConfig<T>;
 
   readonly #settings: TTokenSettings;
@@ -45,34 +47,37 @@ class Token<T extends TTokenNames> extends Store<Record<T, TTokenValue>> impleme
     settings?: Partial<TTokenSettings>,
     logger?: Logger,
   ) {
+    const namedLogger = logger?.named(MODULE_NAME);
     const initialState = fillObject<TTokenConfig<T>, Record<T, TTokenValue>>(config, () => null);
     const validation = fillObject<TTokenConfig<T>, Record<T, typeof IsToken>>(config, () => IsToken);
     const empty = fillObject<TTokenConfig<T>, Record<T, TStoreEmptyFn<TTokenValue>>>(config, () => IsEmpty);
     super({ initialState, validation, isEmpty: empty }, { cache: modules?.cache }, { name: MODULE_NAME }, logger);
 
+    this.#namedLogger = namedLogger;
     this.#config = config;
     this.#settings = {
       waitTime: settings?.waitTime ?? 0,
     };
-    this.#modules = modules;
+    this.#modules = { timer: modules.timer };
   }
 
   public restart() {
+    Object.values(this.#modules).forEach((module) => module?.restart());
     super.restart();
-    Object.values(this.#modules).forEach((module) => module.restart());
+    this.#namedLogger?.restart();
   }
 
   public setToken(name: T, value: TTokenValue): void {
     super.set(name, () => value);
   }
 
-  public async getAuthHeader(name: T, waitToken: boolean = false): Promise<[string, string] | null> {
+  public async getAuthHeader(name: T): Promise<[string, string] | null> {
     const token = super.get(name);
     if (token) {
       return this.#tokenHeader(token, this.#config[name]);
     }
 
-    if (!waitToken) return null;
+    if (!this.#settings.waitTime) return null;
 
     const timerName = `${MODULE_NAME}-${name.toString()}`;
     return new Promise<[string, string]>((resolve, reject) => {

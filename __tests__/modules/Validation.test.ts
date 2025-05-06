@@ -72,7 +72,7 @@ describe('Validation class:', () => {
         statusText: 'OK',
       },
     );
-    const data = await ResponseFactory.parse('json', response);
+    const data = await ResponseFactory.parse(response, 'json');
     const { validData } = validation.parse<'getTasks'>('getTasks', data, response, {
       url: '',
       method: 'GET',
@@ -91,7 +91,7 @@ describe('Validation class:', () => {
         statusText: 'Unauthorized',
       },
     );
-    const data = await ResponseFactory.parse('json', response);
+    const data = await ResponseFactory.parse(response, 'json');
     const { validError } = validation.parse<'getTasks'>('getTasks', data, response, {
       url: '',
       method: 'GET',

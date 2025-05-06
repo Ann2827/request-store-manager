@@ -9,10 +9,6 @@ export type THttpsSettings = {
    * @default json
    */
   contentType: TResponseFormat;
-  /**
-   * Дожидаться токена или вернуть сразуответ-ошибку TODO: может достаточно waitTime?
-   */
-  waitToken: boolean;
   loader: boolean;
   notifications: boolean;
 };

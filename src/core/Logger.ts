@@ -3,12 +3,16 @@ type Params<T extends (...args: any) => any> = T extends (a: any, ...args: infer
 export type NamedLogger = ReturnType<Logger['named']>;
 
 function styledTitle(text: string, colored = false): [string, string] {
-  return ['%c' + text, 'font-weight: bold;' + colored ? 'color: blue;' : ''];
+  const style = 'font-weight: bold;' + (colored ? 'color: blue;' : '');
+  return ['%c' + text, style];
 }
 
 function table(diff: [string, string][]) {
   return Object.fromEntries(
-    diff.map(([prev, next]) => [prev.split(':')[0], { prev: prev.split(':')[1], next: next.split(':')[1] }]),
+    diff.map(([prev, next]) => {
+      const key = prev.split(':')[0];
+      return [key, { prev: prev.replace(`${key}:`, ''), next: next.replace(`${key}:`, '') }];
+    }),
   );
 }
 
@@ -38,7 +42,7 @@ class Logger {
     console.groupCollapsed('Advanced info');
     console.log('Prev state:', prev);
     console.log('Next state:', next);
-    if (listeners !== undefined) console.log('Active listeners:', ...styledTitle(listeners.toString()));
+    if (listeners !== undefined) console.log(...styledTitle(`Active listeners: ${listeners.toString()}`));
     console.groupEnd();
   }
 
@@ -75,6 +79,14 @@ class Logger {
   }
 
   /**
+   * @param name - название модуля
+   */
+  public restart(name: string): void {
+    if (!this.#logsOn) return;
+    console.log(...styledTitle(`Module: ${name}.`), 'Was restarted');
+  }
+
+  /**
    * Возвращает набор методов класса с заданным названием модуля.
    * @param name - название модуля
    */
@@ -84,6 +96,7 @@ class Logger {
       message: (...args: Params<Logger['message']>) => this.message(name, ...args),
       warn: (...args: Params<Logger['warn']>) => this.warn(name, ...args),
       error: (...args: Params<Logger['error']>) => this.error(name, ...args),
+      restart: (...args: Params<Logger['restart']>) => this.restart(name, ...args),
     };
   }
 }

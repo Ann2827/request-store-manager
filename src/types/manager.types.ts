@@ -3,7 +3,7 @@ import { Conserve, Https, Loader, Needs, Notifications, Store, Token } from '@mo
 import { IModule } from './module.types';
 import { NoStringIndex, SelectKeys } from './common.types';
 
-import type { TConserveAdapter, THttpsAdapter, TNeedsAdapter } from './adapter.types';
+import type { TConserveAdapter, THttpsAdapter } from './adapter.types';
 import type {
   IHttpsRequest,
   IMessagesConfig,
@@ -11,6 +11,7 @@ import type {
   TCacheSettings,
   THttpsConfigNamedRequest,
   THttpsSettings,
+  TNeedsBase,
   TNotificationsBase,
   TNotificationsSettings,
   TRequestSettings,
@@ -27,6 +28,9 @@ export interface Template<T extends TTokenNames, S extends TStoreBase> {
   fn: (...args: any) => IHttpsRequest<T>;
   success: any;
   error?: any;
+  /**
+   * Куда автоматически сохранять (преобразованный?) ответ. Несколько namedRequests могут сохранять данные в один store key.
+   */
   storeKey?: keyof S | undefined;
 }
 export type RequestManagerBase<T extends TTokenNames, S extends TStoreBase> = Record<PropertyKey, Template<T, S>>;
@@ -40,7 +44,7 @@ export interface IManagerModules<
   loader: Loader;
   store: Store<S>;
   token: Token<T>;
-  needs: Needs<T, THttpsAdapter<T, S, RM>, S, N, TConserveAdapter<T, S, RM>, TNeedsAdapter<T, S, RM>>;
+  needs: Needs<T, THttpsAdapter<T, S, RM>, S, N, TConserveAdapter<T, S, RM>, TNeedsBase<T, S, THttpsAdapter<T, S, RM>>>;
   https: Https<T, THttpsAdapter<T, S, RM>, N>;
   notifications: Notifications<N>;
   conserve: Conserve<T, THttpsAdapter<T, S, RM>, S, TConserveAdapter<T, S, RM>>;
@@ -65,11 +69,10 @@ export type TManagerStore<
   RM extends RequestManagerBase<T, S>,
   Key extends keyof S,
 > = {
-  // key: Key;
   default: S[Key];
-  // converter?: (props: { state: S[Key]; validData: Result }) => S[Key];
   cache?: TCacheOptions;
-  autoRequest?: keyof RM;
+  autoRequest?: SelectKeys<NoStringIndex<RM>, { storeKey: Key }, 'contains->'> | undefined;
+  // autoRequest?: keyof RM;
   validation?: TStoreValidationFn<S[Key]>;
   isEmpty?: TStoreEmptyFn<S[Key]>;
 };
@@ -88,7 +91,8 @@ export type TManagerConfigFull<
   K extends keyof RM,
 > = THttpsConfigNamedRequest<T, THttpsAdapter<T, S, RM>, K> & {
   mock?: (...params: Parameters<typeof globalThis.fetch>) => Response;
-  save?: TManagerSaveConfig<S, RM[K]['storeKey'], RM[K]['success']>;
+  save?: TManagerSaveConfig<S, keyof S, RM[K]['success']>;
+  // save?: TManagerSaveConfig<S, RM[K]['storeKey'], RM[K]['success']>;
 };
 export interface IManagerConfig<
   T extends TTokenNames,
@@ -99,7 +103,8 @@ export interface IManagerConfig<
   settings?: Partial<TManagerSettings>;
   tokens: Record<T, TTokenOption>;
   store: {
-    [K in keyof S]: TManagerStore<T, S, RM, K> | S[K];
+    [K in keyof S]: TManagerStore<T, S, RM, K>;
+    // [K in keyof S]: S[K] | TManagerStore<T, S, RM, K>;
   };
   namedRequests: {
     [K in keyof RM]: RM[K]['fn'] | TManagerConfigFull<T, S, RM, K>;

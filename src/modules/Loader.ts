@@ -17,7 +17,7 @@ class Loader extends Context<{ active: boolean; quantity: number }> implements I
 
   public determinate(): void {
     if (super.state.quantity <= 1) {
-      super.restart();
+      super.setState(() => ({ active: false, quantity: 0 }));
       return;
     }
     super.setState((prev) => ({ active: true, quantity: prev.quantity - 1 }));

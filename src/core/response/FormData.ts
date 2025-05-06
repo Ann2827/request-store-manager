@@ -1,4 +1,10 @@
+import { IResponseBase, staticImplements } from '@types';
+
+@staticImplements<IResponseBase>()
 class FormDataResponse {
+  // TODO: add application/x-www-form-urlencoded
+  public static contentType = 'multipart/form-data';
+
   public static async parse(response: Response): Promise<FormData> {
     let result;
     try {
@@ -9,9 +15,9 @@ class FormDataResponse {
     return result;
   }
 
-  public static contentType(): string {
-    // TODO: add application/x-www-form-urlencoded
-    return 'multipart/form-data';
+  // TODO: ann convert data: object -> FormData
+  public static stringify(data: FormData): FormData {
+    return data;
   }
 }
 

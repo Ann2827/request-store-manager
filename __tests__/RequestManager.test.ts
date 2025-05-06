@@ -45,11 +45,8 @@ describe('RequestManager class:', () => {
         notifications: {},
         cache: { prefix: 'test' },
         request: { mockMode: true },
-        https: {
-          waitToken: false,
-          notifications: false,
-          loader: false,
-        },
+        https: { notifications: false, loader: false },
+        token: { waitTime: 0 },
         // needs: { waitRequest: true },
       },
       tokens: {
@@ -69,8 +66,12 @@ describe('RequestManager class:', () => {
             !!data && typeof data === 'object' && 'backlog' in data && 'done' in data,
           isEmpty: (value) => value.backlog.length === 0 && value.done.length === 0,
         },
-        zero: false,
-        non: null,
+        zero: {
+          default: false,
+        },
+        non: {
+          default: null,
+        },
       },
       namedRequests: {
         getTasks: {
@@ -128,6 +129,7 @@ describe('RequestManager class:', () => {
           }),
           save: {
             storeKey: 'zero',
+            converter: ({ state, validData }) => state,
           },
         },
         postAuth: () => ({
@@ -172,8 +174,8 @@ describe('RequestManager class:', () => {
   });
 
   test('needAction', async () => {
-    await requestManager.needAction('tasks', NeedsActionTypes.request, 1);
-    await requestManager.getModule('needs').action('tasks', NeedsActionTypes.request, 1);
+    await requestManager.needAction<'tasks'>('tasks', NeedsActionTypes.request, 1);
+    // await requestManager.getModule('needs').action('tasks', NeedsActionTypes.request, '1');
 
     expect(requestManager.get('tasks')).toStrictEqual({ backlog: ['task1'], done: ['tsak2'] });
   });

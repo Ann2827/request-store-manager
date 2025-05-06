@@ -30,6 +30,8 @@ export type TNeedsModules<
 
 export const MODULE_NAME = 'needs';
 
+// TODO: выгружать из памяти (хранилища) неиспользуемые данные
+
 class Needs<
     T extends TTokenNames,
     H extends THttpsBase<T>,
@@ -56,8 +58,9 @@ class Needs<
   }
 
   public restart(): void {
-    super.restart();
     Object.values(this.#modules).forEach((module) => module.restart()); // TODO: нужно ли это делать? При общем использовании и при частичном
+    super.restart();
+    this.#namedLogger?.restart();
   }
 
   public async action<Name extends keyof L = keyof L>(
@@ -65,21 +68,22 @@ class Needs<
     type: NeedsActionTypes = NeedsActionTypes.request,
     ...args: Parameters<L[Name] extends keyof H ? H[L[Name]][0] : () => void>
   ): Promise<void> {
-    const status = super.get(name);
-    if (status !== null && type === NeedsActionTypes.request) return;
+    if (!!super.get(name) && type === NeedsActionTypes.request) return;
 
     if (type === NeedsActionTypes.request) {
-      const cacheData = this.#modules.store.get(name);
-      if (cacheData && !this.#modules.store.isEmpty(name, cacheData)) {
+      const storeData = this.#modules.store.get(name);
+      if (storeData && !this.#modules.store.isEmpty(name, storeData)) {
         super.set(name, () => true);
-        this.#namedLogger?.message(`${name.toString()} restored from cache.`);
         return;
       }
     }
 
+    if (super.get(name) === false && type === NeedsActionTypes.request) return;
+
     const requestName = this.#config[name];
     if (!requestName) {
       this.#namedLogger?.message(`Request name for ${name.toString()} not found.`);
+      super.set(name, () => false);
       return;
     }
 
