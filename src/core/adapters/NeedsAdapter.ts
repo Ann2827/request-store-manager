@@ -1,11 +1,13 @@
 import { Needs } from '@modules';
+import { fillObject } from '@utils';
 
 import type {
   IManagerConfig,
-  INeedsConfig,
   RequestManagerBase,
+  TConserveAdapter,
   THttpsAdapter,
   TNeedsAdapter,
+  TNeedsBase,
   TNotificationsBase,
   TStoreBase,
   TTokenNames,
@@ -13,7 +15,7 @@ import type {
 
 import Logger from '../Logger';
 
-import { IsFullRequestConfig } from './functions';
+import { IsFullStoreConfig } from './functions';
 
 import type { TNeedsModules } from '../../modules/Needs';
 
@@ -22,20 +24,26 @@ class NeedsAdapter<
   S extends TStoreBase,
   RM extends RequestManagerBase<T, S>,
   N extends TNotificationsBase,
-> extends Needs<T, S, THttpsAdapter<T, S, RM>, N, TNeedsAdapter<T, S, RM>> {
+> extends Needs<
+  T,
+  THttpsAdapter<T, S, RM>,
+  S,
+  N,
+  TConserveAdapter<T, S, RM>,
+  TNeedsBase<T, S, THttpsAdapter<T, S, RM>>
+> {
   constructor(
     config: IManagerConfig<T, S, RM, N>,
-    modules: TNeedsModules<T, THttpsAdapter<T, S, RM>, S, N>,
+    modules: TNeedsModules<T, THttpsAdapter<T, S, RM>, S, N, TConserveAdapter<T, S, RM>>,
     logger: Logger,
   ) {
-    const needsConfig = Object.entries(config.namedRequests).reduce<INeedsConfig<T, THttpsAdapter<T, S, RM>, S>>(
-      (prev, [hKey, value]) => {
-        if (IsFullRequestConfig<T, S, RM, typeof hKey>(value) && value.store)
-          return { ...prev, [value.store.key]: { requestName: hKey, converter: value.store.converter } };
-        return prev;
-      },
-      {} as INeedsConfig<T, THttpsAdapter<T, S, RM>, S>,
-    );
+    const needsConfig: TNeedsAdapter<T, S, RM> = fillObject<
+      IManagerConfig<T, S, RM, N>['store'],
+      TNeedsAdapter<T, S, RM>
+    >(config.store, (value, key) => {
+      if (IsFullStoreConfig<T, S, RM, typeof key>(value) && !!value?.autoRequest) return value?.autoRequest;
+    });
+
     super(needsConfig, modules, logger);
   }
 }

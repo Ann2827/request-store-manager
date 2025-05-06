@@ -50,8 +50,8 @@ class Notifications<N extends TNotificationsBase = TNotificationsBase>
     super.state.forEach(({ id }) => {
       this.#drop(id);
     });
-    super.restart();
     Object.values(this.#modules).forEach((module) => module.restart());
+    super.restart();
   }
 
   /**

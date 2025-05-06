@@ -18,6 +18,7 @@ import Token from '../../src/modules/Token';
 import Timer from '../../src/modules/Timer';
 import Needs from '../../src/modules/Needs';
 import Store from '../../src/modules/Store';
+import Conserve from '../../src/modules/Conserve';
 
 type TTokens = 'main';
 interface THttps extends THttpsBase<TTokens> {
@@ -25,16 +26,20 @@ interface THttps extends THttpsBase<TTokens> {
 }
 type TStore = {
   tasks: { quantity: number };
+  zero: boolean;
 };
 interface INeeds extends TNeedsBase<TTokens, TStore, THttps> {
   tasks: 'getTasks';
 }
+type TConserve = {
+  getTasks: 'tasks';
+};
 
 describe('Needs class:', () => {
   let restoreResponse: () => void;
   let restoreFetch: () => void;
   let restoreStorage: () => void;
-  let needs: Needs<TTokens, TStore, THttps, TNotificationsBase, INeeds>;
+  let needs: Needs<TTokens, THttps, TStore, TNotificationsBase, TConserve, INeeds>;
   let token: Token<TTokens>;
   let store: Store<TStore>;
 
@@ -45,13 +50,21 @@ describe('Needs class:', () => {
     const timer = new Timer();
     token = new Token({ main: 'bearer' }, { timer });
     store = new Store<TStore>({
-      initialState: { tasks: { quantity: 0 } },
-      empty: { tasks: ({ quantity }) => !quantity },
+      initialState: { tasks: { quantity: 0 }, zero: false },
+      isEmpty: { tasks: ({ quantity }) => !quantity },
     });
-    needs = new Needs<TTokens, TStore, THttps, TNotificationsBase, INeeds>(
-      { tasks: { requestName: 'getTasks' } },
+    needs = new Needs<TTokens, THttps, TStore, TNotificationsBase, TConserve, INeeds>(
+      { tasks: 'getTasks', zero: undefined },
       {
         store,
+        conserve: new Conserve<TTokens, THttps, TStore, TConserve>(
+          {
+            getTasks: {
+              storeKey: 'tasks',
+            },
+          },
+          { store },
+        ),
         https: new Https<TTokens, THttps>(
           {
             getTasks: (quantity: number) => ({

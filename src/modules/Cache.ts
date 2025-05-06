@@ -35,9 +35,9 @@ class Cache implements IModule {
 
   constructor(settings?: Partial<TCacheSettings>, logger?: Logger) {
     this.#settings = {
-      prefix: settings?.prefix
-        ? `${settings.prefix}--${MODULE_NAME}-`
-        : `${MODULE_NAME}-` + (settings?.postfix ? `${settings.postfix}` : ''),
+      prefix:
+        (settings?.prefix ? `${settings.prefix}--${MODULE_NAME}-` : `${MODULE_NAME}-`) +
+        (settings?.postfix ? `${settings.postfix}-` : ''),
     };
     this.#namedLogger = logger?.named(MODULE_NAME);
     this.#storage = new StorageFactory();
@@ -50,12 +50,13 @@ class Cache implements IModule {
 
   public restart() {
     this.#storage = new StorageFactory();
+    this.#namedLogger?.restart();
   }
 
   /**
    * @param key - указать без префикса
    */
-  public setCacheItem(key: string, value: string, options?: Partial<TCacheOptions>) {
+  public setCacheItem(key: string, value: any, options?: Partial<TCacheOptions>) {
     const storage = this.#storage.getInstance(options?.place);
 
     const expires = this.#getExpires(options?.maxAge);

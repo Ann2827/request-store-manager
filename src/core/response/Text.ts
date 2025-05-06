@@ -1,4 +1,10 @@
+import { IResponseBase, staticImplements } from '@types';
+
+@staticImplements<IResponseBase>()
 class TextResponse {
+  //TODO: add text/javascript text/css text/plain
+  public static contentType = 'text/html';
+
   public static async parse(response: Response): Promise<string> {
     let result;
     try {
@@ -9,9 +15,8 @@ class TextResponse {
     return result;
   }
 
-  public static contentType(): string {
-    //TODO: add text/javascript text/css
-    return 'text/html';
+  public static stringify(data: string): string {
+    return data;
   }
 }
 

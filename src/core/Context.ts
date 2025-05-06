@@ -18,6 +18,8 @@ class Context<S extends object> {
     this.#listeners.forEach((listener) => listener(nextState));
   }
 
+  #restart;
+
   // Если не сработает getter в react, можно попробовать поиграться с проксированием
   // https://stackoverflow.com/questions/37973290/javascript-bind-method-does-not-work-on-getter-property
   // #createProxy() {
@@ -40,9 +42,10 @@ class Context<S extends object> {
     this.#listeners = [];
     this.#namedLogger = namedLogger;
 
-    this.restart = () => {
+    this.#restart = () => {
       this.#listeners = [];
       this.#state = clone(initialState);
+      this.#namedLogger?.restart();
     };
 
     this.__test = this.__test.bind(this);
@@ -64,7 +67,9 @@ class Context<S extends object> {
   /**
    * Позволяет сброситься до состояния после инициализации. Переопределяется в constructor
    */
-  public restart(): void {}
+  public restart(): void {
+    this.#restart();
+  }
 
   public get state(): S {
     return this.#state;
@@ -93,9 +98,10 @@ class Context<S extends object> {
    *    clean();
    * @returns функцию очистки
    */
-  public subscribe(fn: TSubscribeFn<S>): () => void {
-    this.#listeners.push(fn);
-    return () => (this.#listeners = this.#listeners.filter((listener) => listener !== fn));
+  public subscribe(fn?: TSubscribeFn<S>): () => void {
+    const callback = fn ?? ((s: S) => s);
+    this.#listeners.push(callback);
+    return () => (this.#listeners = this.#listeners.filter((listener) => listener !== callback));
   }
 }
 

@@ -4,3 +4,5 @@ export * from './module.types';
 export * from './manager.types';
 export * from './modules';
 export * from './adapter.types';
+export * from './response.types';
+export * from './decorators';

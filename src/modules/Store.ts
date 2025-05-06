@@ -21,7 +21,7 @@ class Store<S extends TStoreBase> extends Context<S> implements IModule {
   readonly #validation: { [K in keyof S]: TStoreValidationFn<S[K]> };
   // readonly #validation: Record<keyof S, TStoreValidationFn<S[keyof S]>>;
 
-  readonly #empty: { [K in keyof S]: TStoreEmptyFn<S[K]> };
+  readonly #isEmpty: { [K in keyof S]: TStoreEmptyFn<S[K]> };
 
   readonly #modules: TStateModules<keyof Partial<S>>;
 
@@ -45,7 +45,7 @@ class Store<S extends TStoreBase> extends Context<S> implements IModule {
     );
     const filledEmpty = fillObject<S, { [K in keyof S]: TStoreEmptyFn<S[K]> }>(
       config.initialState,
-      (_, key) => config?.empty?.[key] || ((value: S[typeof key]): boolean => !value),
+      (_, key) => config?.isEmpty?.[key] || ((value: S[typeof key]): boolean => !value),
     );
 
     const name = settings?.name || MODULE_NAME;
@@ -53,19 +53,20 @@ class Store<S extends TStoreBase> extends Context<S> implements IModule {
     super(config.initialState, namedLogger);
 
     Object.entries(config.initialState).forEach(([key, value]) => {
+      if (filledEmpty[key](value as S[typeof key])) return;
       this.#validate(filledValidation[key], key, value);
     });
 
     this.#validation = filledValidation;
-    this.#empty = filledEmpty;
+    this.#isEmpty = filledEmpty;
     this.#modules = { ...modules };
     this.#namedLogger = namedLogger;
   }
 
   public restart() {
-    super.restart();
     // TODO: нужно ли это делать? При общем использовании и при частичном
-    Object.values(this.#modules).forEach((module) => module.restart());
+    Object.values(this.#modules).forEach((module) => module?.restart());
+    super.restart();
   }
 
   public set<K extends keyof S = keyof S>(key: K, fn: (prev: S[K]) => S[K]): void {
@@ -78,11 +79,11 @@ class Store<S extends TStoreBase> extends Context<S> implements IModule {
       return;
     }
 
-    this.#modules.cache?.set(key.toString(), value.toString());
+    this.#modules.cache?.set(key.toString(), value);
   }
 
   public isEmpty<K extends keyof S = keyof S>(key: K, value: S[K]): boolean {
-    return this.#empty[key](value);
+    return this.#isEmpty[key](value);
   }
 
   public get<K extends keyof S = keyof S>(key: K): S[K] {
@@ -93,6 +94,7 @@ class Store<S extends TStoreBase> extends Context<S> implements IModule {
     if (cacheValue === undefined) return value;
     if (this.#validate<K>(this.#validation[key], key, cacheValue)) {
       this.#namedLogger?.message(`${key.toString()} restored from cache.`);
+      this.set(key, () => cacheValue);
       return cacheValue;
     }
 
