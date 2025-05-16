@@ -49,7 +49,9 @@ class Conserve<T extends TTokenNames, H extends THttpsBase<T>, S extends TStoreB
       if (!config.converter) return validData as unknown as typeof prev;
 
       const converted = config.converter({ state: prev, validData, fetchData });
-      this.#namedLogger?.message(`Valid response from request: ${requestName.toString()} was converted`);
+      this.#namedLogger?.message(
+        `Valid response from request: ${requestName.toString()} was converted for ${config.storeKey.toString()}`,
+      );
       return converted;
     });
   }
