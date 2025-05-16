@@ -74,7 +74,7 @@ class Store<S extends TStoreBase> extends Context<S> implements IModule {
     if (!this.#validate<K>(this.#validation[key], key, value)) return;
     super.setState((prev) => ({ ...prev, [key]: value }));
 
-    if (!value) {
+    if (this.isEmpty(key, value)) {
       this.#modules.cache?.remove(key.toString());
       return;
     }
