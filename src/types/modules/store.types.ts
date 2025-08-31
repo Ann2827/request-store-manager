@@ -1,4 +1,3 @@
-// export type TStoreBase = { [key: string]: unknown };
 export type TStoreBase = Record<PropertyKey, unknown>;
 
 export type TStoreValidationFn<V extends TStoreBase[keyof TStoreBase]> = (payload: unknown) => payload is V;
@@ -22,7 +21,7 @@ export type TStoreConfig<S extends TStoreBase> = {
    * Какое значение считать пустым? Используется, как правило полученя кэша. Если значение пустое, то пробуем достать из кэша.
    * @default (value) => !value
    */
-  empty?: {
+  isEmpty?: {
     [K in keyof S]?: TStoreEmptyFn<S[K]>;
   };
 };

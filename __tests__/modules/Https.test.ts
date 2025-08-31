@@ -27,7 +27,26 @@ describe('Https class:', () => {
     restoreResponse = mockResponse();
     restoreFetch = mockFetch();
     restoreStorage = mockStorage();
+
     const timer = new Timer();
+    const request = new Request(
+      {
+        mockFn(name, input, init) {
+          const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+          const quantity = Number(url.split('/').reverse()[0]);
+          return new Response(
+            JSON.stringify({
+              quantity,
+            }),
+            {
+              status: 200,
+              statusText: 'OK',
+            },
+          );
+        },
+      },
+      { mockMode: true },
+    );
     token = new Token({ main: 'bearer' }, { timer });
     https = new Https<TTokens, THttps>(
       {
@@ -38,24 +57,7 @@ describe('Https class:', () => {
         }),
       },
       {
-        request: new Request(
-          {
-            mockFn(name, input, init) {
-              const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
-              const quantity = Number(url.split('/').reverse()[0]);
-              return new Response(
-                JSON.stringify({
-                  quantity,
-                }),
-                {
-                  status: 200,
-                  statusText: 'OK',
-                },
-              );
-            },
-          },
-          { mockMode: true },
-        ),
+        request,
         loader: new Loader(),
         token,
         messages: new Messages(),
@@ -79,5 +81,23 @@ describe('Https class:', () => {
     const { validData, data } = await https.namedRequest('getTasks', 1);
     expect(validData).toStrictEqual({ quantity: 1 });
     expect(data).toStrictEqual({ quantity: 1 });
+  });
+
+  test('different double namedRequest', async () => {
+    const [answer1, answer2] = await Promise.all([
+      https.namedRequest('getTasks', 1),
+      https.namedRequest('getTasks', 2),
+    ]);
+    expect(answer1.validData).toStrictEqual({ quantity: 1 });
+    expect(answer2.validData).toStrictEqual({ quantity: 2 });
+  });
+
+  test('same double namedRequest', async () => {
+    const [answer1, answer2] = await Promise.all([
+      https.namedRequest('getTasks', 1),
+      https.namedRequest('getTasks', 1),
+    ]);
+    expect(answer1.validData).toStrictEqual({ quantity: 1 });
+    expect(answer2.validData).toStrictEqual({ quantity: 1 });
   });
 });

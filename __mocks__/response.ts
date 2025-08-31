@@ -51,6 +51,7 @@ class ResponseFakeClass {
       url: '',
     } as unknown as Response;
     this.json = this.json.bind(this);
+    this.text = this.text.bind(this);
     return { ...this, ...this.prototype };
   }
 
@@ -73,18 +74,49 @@ class ResponseFakeClass {
     return { ...this.prototype };
   }
 
-  json(): Promise<any> {
-    const prototype = this.prototype;
-    return new Promise((resolve) => {
-      resolve(JSON.parse(prototype.body as unknown as string));
-    });
+  async json(): Promise<any> {
+    const body = this.prototype.body;
+    let result = '';
+    if (typeof body !== 'string' && !!body) {
+      const reader = body.getReader();
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          result = result + (value as unknown as string);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+      // reader.releaseLock();
+    } else result = body || '';
+
+    let parsed = {};
+    try {
+      parsed = JSON.parse(result);
+    } catch (error) {
+      console.error(error);
+    }
+
+    return parsed;
   }
 
-  text(): Promise<string> {
-    const prototype = this.prototype;
-    return new Promise((resolve) => {
-      resolve(prototype.body as unknown as string);
-    });
+  async text(): Promise<string> {
+    const body = this.prototype.body;
+    let result = '';
+    if (typeof body !== 'string' && !!body) {
+      const reader = body.getReader();
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) return result;
+          result = result + value.toString();
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    } else result = body || '';
+    return body as unknown as string;
   }
 
   arrayBuffer(): Promise<ArrayBuffer> {

@@ -7,7 +7,6 @@ import Cache from './Cache';
 export const MODULE_NAME = 'cacheStrict';
 
 /**
- * FIXME: Заместитель (почти)
  * Модуль работает только с ключами, указанными в конфиге.
  */
 class CacheStrict<C extends TCacheNames> extends Cache implements IModule {
@@ -29,10 +28,18 @@ class CacheStrict<C extends TCacheNames> extends Cache implements IModule {
     this.#config = config;
   }
 
-  public set(key: C, value: string) {
+  public restart(): void {
+    (Object.keys(this.#config) as Array<C>).forEach((key) => {
+      this.remove(key);
+    });
+    super.restart();
+    this.#namedLogger?.restart();
+  }
+
+  public set(key: C, value: any) {
     const options = this.#config[key];
     if (!options) {
-      this.#namedLogger?.warn(`Cache not set because ${key.toString()} not found in config.`);
+      this.#namedLogger?.message(`Cache not set because ${key.toString()} not found in config.`);
       return;
     }
 
@@ -42,7 +49,7 @@ class CacheStrict<C extends TCacheNames> extends Cache implements IModule {
   public get(key: C): string | undefined {
     const options = this.#config[key];
     if (!options) {
-      this.#namedLogger?.warn(`Cache is undefined because ${key.toString()} not found in config.`);
+      this.#namedLogger?.message(`Cache is undefined because ${key.toString()} not found in config.`);
       return;
     }
 
@@ -52,7 +59,7 @@ class CacheStrict<C extends TCacheNames> extends Cache implements IModule {
   public remove(key: C) {
     const options = this.#config[key];
     if (!options) {
-      this.#namedLogger?.warn(`Cache not remove because ${key.toString()} not found in config.`);
+      this.#namedLogger?.message(`Cache not remove because ${key.toString()} not found in config.`);
       return;
     }
 

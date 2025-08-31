@@ -4,14 +4,15 @@ import mockResponse from '../__mocks__/response';
 import mockFetch from '../__mocks__/fetch';
 import mockStorage from '../__mocks__/storage';
 import RequestManager from '../src/RequestManager';
+import { stringify } from '../src/utils/stringify';
 
 type TTokens = 'main';
-type Store = {
+type TStore = {
   tasks: { backlog: string[]; done: string[] };
   zero: boolean;
   non: null;
 };
-interface RM extends RequestManagerBase<TTokens, Store> {
+interface RM extends RequestManagerBase<TTokens, TStore> {
   getTasks: {
     fn: (quantity: number) => IHttpsRequest<TTokens>;
     success: { data: { type: 'backlog' | 'done'; text: string }[]; quantity: number };
@@ -32,23 +33,20 @@ describe('RequestManager class:', () => {
   let restoreResponse: () => void;
   let restoreFetch: () => void;
   let restoreStorage: () => void;
-  let requestManager: RequestManager<TTokens, Store, RM>;
+  let requestManager: RequestManager<TTokens, TStore, RM>;
 
   beforeAll(() => {
     restoreResponse = mockResponse();
     restoreFetch = mockFetch();
     restoreStorage = mockStorage();
-    requestManager = new RequestManager<TTokens, Store, RM>({
+    requestManager = new RequestManager<TTokens, TStore, RM>({
       settings: {
         logger: false,
         notifications: {},
         cache: { prefix: 'test' },
         request: { mockMode: true },
-        https: {
-          waitToken: false,
-          notifications: false,
-          loader: false,
-        },
+        https: { notifications: false, loader: false },
+        token: { waitTime: 0 },
         // needs: { waitRequest: true },
       },
       tokens: {
@@ -59,6 +57,22 @@ describe('RequestManager class:', () => {
           },
         },
       },
+      store: {
+        tasks: {
+          default: { backlog: [], done: [] },
+          cache: { maxAge: 0, place: 'sessionStorage' },
+          autoRequest: 'getTasks',
+          validation: (data): data is TStore['tasks'] =>
+            !!data && typeof data === 'object' && 'backlog' in data && 'done' in data,
+          isEmpty: (value) => value.backlog.length === 0 && value.done.length === 0,
+        },
+        zero: {
+          default: false,
+        },
+        non: {
+          default: null,
+        },
+      },
       namedRequests: {
         getTasks: {
           request: (quantity: number) => ({
@@ -66,8 +80,6 @@ describe('RequestManager class:', () => {
             method: 'GET',
             tokenName: 'main',
           }),
-          validation: (dataJson, response): dataJson is RM['getTasks']['success'] =>
-            !!response?.ok && typeof dataJson === 'object',
           mock: (input, init) => {
             const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
             const quantity = Number(url.split('/').reverse()[0]);
@@ -85,9 +97,24 @@ describe('RequestManager class:', () => {
               },
             );
           },
-          store: {
-            key: 'tasks',
-            default: { backlog: [], done: [] },
+          parse: {
+            isSuccess: (dataJson, response): dataJson is RM['getTasks']['success'] =>
+              !!response?.ok && typeof dataJson === 'object',
+            onSuccess() {
+              requestManager
+                .getModule('notifications')
+                .send({ data: { text: 'Данные успешно получены.' }, type: 'success' });
+            },
+            onError({ validError }, response, fetchData) {
+              if (!response.ok) return;
+              if (validError)
+                requestManager
+                  .getModule('notifications')
+                  .send({ data: { text: stringify(validError)[0] }, type: 'error' });
+            },
+          },
+          save: {
+            storeKey: 'tasks',
             converter: ({ state, validData }) => {
               const { backlog, done } = Object.groupBy(validData.data, ({ type }) => type);
               return { backlog: backlog?.map(({ text }) => text) || [], done: done?.map(({ text }) => text) || [] };
@@ -112,9 +139,9 @@ describe('RequestManager class:', () => {
             method: 'GET',
             tokenName: 'main',
           }),
-          store: {
-            key: 'zero',
-            default: false,
+          save: {
+            storeKey: 'zero',
+            converter: ({ state, validData }) => state,
           },
         },
         postAuth: () => ({
@@ -159,7 +186,9 @@ describe('RequestManager class:', () => {
   });
 
   test('needAction', async () => {
-    await requestManager.needAction('tasks', NeedsActionTypes.request, 1);
+    await requestManager.needAction<'tasks'>('tasks', NeedsActionTypes.request, 1);
+    // await requestManager.getModule('needs').action('tasks', NeedsActionTypes.request, '1');
+
     expect(requestManager.get('tasks')).toStrictEqual({ backlog: ['task1'], done: ['tsak2'] });
   });
 

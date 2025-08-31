@@ -1,3 +1,5 @@
+import type { IResponseBase } from '@types';
+
 import ArrayBufferResponse from './ArrayBuffer';
 import BlobResponse from './Blob';
 import BytesResponse from './Bytes';
@@ -7,11 +9,20 @@ import TextResponse from './Text';
 
 export type TResponseFormat = 'json' | 'text' | 'formData' | 'bytes' | 'blob' | 'arrayBuffer';
 
+const map = new Map<TResponseFormat, IResponseBase>([
+  ['json', JsonResponse],
+  ['text', TextResponse],
+  ['formData', FormDataResponse],
+  ['bytes', BytesResponse],
+  ['blob', BlobResponse],
+  ['arrayBuffer', ArrayBufferResponse],
+]);
+
 /**
  * Организовыват работу с разными форматами данных при запросах.
  */
 class ResponseFactory {
-  public static async parse(format: TResponseFormat, response: Response) {
+  public static async parse(response: Response, format: TResponseFormat = 'json') {
     switch (format) {
       case 'text': {
         return TextResponse.parse(response);
@@ -34,25 +45,35 @@ class ResponseFactory {
     }
   }
 
+  public static stringify(data: any, format: TResponseFormat = 'json'): BodyInit {
+    const ResponseClass = map.get(format) || JsonResponse;
+    return ResponseClass.stringify(data);
+  }
+
   public static requestContentType(format: TResponseFormat) {
-    switch (format) {
-      case 'text': {
-        return TextResponse.contentType();
+    const ResponseClass = map.get(format) || JsonResponse;
+    return ResponseClass.contentType;
+  }
+
+  public static getFormat(contentType?: string): TResponseFormat {
+    switch (contentType) {
+      case TextResponse.contentType: {
+        return 'text';
       }
-      case 'formData': {
-        return FormDataResponse.contentType();
+      case FormDataResponse.contentType: {
+        return 'formData';
       }
-      case 'bytes': {
-        return BytesResponse.contentType();
+      case BytesResponse.contentType: {
+        return 'bytes';
       }
-      case 'blob': {
-        return BlobResponse.contentType();
+      case BlobResponse.contentType: {
+        return 'blob';
       }
-      case 'arrayBuffer': {
-        return ArrayBufferResponse.contentType();
+      case ArrayBufferResponse.contentType: {
+        return 'arrayBuffer';
       }
       default: {
-        return JsonResponse.contentType();
+        return 'json';
       }
     }
   }

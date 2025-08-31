@@ -61,6 +61,7 @@ class Timer extends Context<Record<string, number>> implements IModule {
     });
     this.#timers = {};
     super.restart();
+    this.#namedLogger?.restart();
   }
 
   /**

@@ -41,6 +41,34 @@ export const fillObject = <T extends Record<PropertyKey, unknown>, V extends Rec
       fn(value, key),
     ]),
   ) as { [K in keyof T]: V[K] };
+export const fillObject2 = <T extends object, V extends Record<keyof T, unknown>>(
+  obj: T,
+  fn: <K extends keyof T = keyof T>(value: T[K], key: K) => V[K],
+): V =>
+  Object.fromEntries(
+    (Object.entries(obj) as [keyof T, T[keyof T]][]).map<[keyof T, V[keyof T]]>(([key, value]) => [
+      key,
+      fn(value, key),
+    ]),
+  ) as V;
+export const fillFilterObject = <T extends Record<PropertyKey, unknown>, V extends { [K in keyof T]?: unknown }>(
+  obj: T,
+  fn: <K extends keyof T = keyof T>(value: T[K], key: K) => V[K],
+): Exclude<{ [K in keyof T]?: V[K] }, undefined> =>
+  Object.fromEntries(
+    (Object.entries(obj) as [keyof T, T[keyof T]][])
+      .map<[keyof T, V[keyof T]]>(([key, value]) => [key, fn(value, key)])
+      .filter(([_, value]) => value !== undefined),
+  ) as Exclude<{ [K in keyof T]?: V[K] }, undefined>;
+
+export const filterObj = <T extends Record<PropertyKey, unknown>, R>(
+  obj: T,
+  rule: <K extends keyof T = keyof T>(value: T[K], key: K) => boolean,
+): R =>
+  (Object.entries(obj) as [keyof T, T[keyof T]][]).reduce((prev, [key, value]) => {
+    if (rule(value, key)) return { ...prev, [key]: value };
+    return prev;
+  }, {} as R);
 
 /**
  * Возвращает тело функции в виде строки

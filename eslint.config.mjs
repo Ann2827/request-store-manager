@@ -22,13 +22,11 @@ const config = [
   { ignores: [
     'dist/*',
     'node_modules/*',
-    // '.config.*'
   ] },
   ...fixupConfigRules(
     compat.extends(
       'eslint:recommended',
       'plugin:unicorn/recommended',
-      // 'plugin:@typescript-eslint/recommended',
       'plugin:@typescript-eslint/recommended-type-checked',
       'plugin:import/errors',
       'plugin:import/warnings',

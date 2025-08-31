@@ -9,3 +9,5 @@ export { default as CacheStrict } from './CacheStrict';
 export { default as Request } from './Request';
 export { default as Needs } from './Needs';
 export { default as Notifications } from './Notifications';
+export { default as Validation } from './Validation';
+export { default as Conserve } from './Conserve';

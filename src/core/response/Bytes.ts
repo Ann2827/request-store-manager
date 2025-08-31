@@ -1,4 +1,9 @@
+import { IResponseBase, staticImplements } from '@types';
+
+@staticImplements<IResponseBase>()
 class BytesResponse {
+  public static contentType = '';
+
   public static async parse(response: Response): Promise<Uint8Array> {
     let result;
     try {
@@ -9,8 +14,9 @@ class BytesResponse {
     return result;
   }
 
-  public static contentType(): string {
-    return '';
+  // TODO: ann convert data: object -> Bytes
+  public static stringify(data: Uint8Array): Uint8Array {
+    return data;
   }
 }
 
