@@ -42,6 +42,8 @@ class Needs<
     [K in keyof S]: Required<TNeedsItem<T, H, S[K]>>;
   };
 
+  readonly #revertMap: { [K in keyof H]?: keyof S };
+
   readonly #modules: TNeedsModules<T, H, S, N>;
 
   // readonly #settings: TNeedsSettings;
@@ -60,12 +62,25 @@ class Needs<
         converter: value.converter ?? (({ validData }) => validData as S[typeof key]),
       }),
     );
+    this.#revertMap = Object.fromEntries(
+      Object.entries(config).map<[keyof H, keyof S]>(
+        ([key, value]: [keyof S, Required<TNeedsItem<T, H, S[keyof S]>>]) => [value.requestName, key],
+      ),
+    ) as unknown as { [K in keyof H]?: keyof S };
     this.#namedLogger = logger?.named(MODULE_NAME);
   }
 
   public restart(): void {
     super.restart();
     Object.values(this.#modules).forEach((module) => module.restart()); // TODO: нужно ли это делать? При общем использовании и при частичном
+  }
+
+  public updateStateByRequestName(requestName: keyof H) {
+    const name = this.#revertMap[requestName];
+    if (!name) return;
+
+    const value = this.#modules.store.get(name);
+    super.set(name, () => !this.#modules.store.isEmpty(name, value));
   }
 
   public async action<Name extends keyof S = keyof S>(

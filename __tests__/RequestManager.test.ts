@@ -95,7 +95,9 @@ describe('RequestManager class:', () => {
             validation: (data): data is Store[RM['getTasks']['storeKey']] =>
               !!data && typeof data === 'object' && 'backlog' in data && 'done' in data,
             cache: { maxAge: 0, place: 'sessionStorage' },
-            empty: (value) => value.backlog.length === 0 && value.done.length === 0,
+            empty: (value) => {
+              return value.backlog.length === 0 && value.done.length === 0;
+            },
           },
           afterRequest: ({ response, input }) => {
             if (!response.ok) return;

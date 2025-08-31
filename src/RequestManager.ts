@@ -104,11 +104,13 @@ class RequestManager<
     return this.#modules.token.setToken(...args);
   }
 
-  public namedRequest<Name extends keyof THttpsAdapter<T, S, RM>>(
+  public async namedRequest<Name extends keyof THttpsAdapter<T, S, RM>>(
     name: Name,
     ...args: Parameters<THttpsAdapter<T, S, RM>[Name][0]>
   ): Promise<{ response: Response; validData: THttpsAdapter<T, S, RM>[Name][1] | null; data: unknown }> {
-    return this.#modules.https.namedRequest(name, ...args);
+    const result = await this.#modules.https.namedRequest(name, ...args);
+    this.#modules.needs.updateStateByRequestName(name);
+    return result;
   }
 
   public async needAction<Name extends keyof S = keyof S>(
