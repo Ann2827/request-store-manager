@@ -45,7 +45,7 @@ class Needs<
 {
   readonly #config: L;
 
-  readonly #revertMap: { [K in keyof H]?: keyof S };
+  readonly #revertMap: { [K in keyof H]?: keyof L };
 
   readonly #modules: TNeedsModules<T, H, S, N, C>;
 
@@ -57,10 +57,10 @@ class Needs<
     this.#modules = modules;
     this.#config = { ...config };
     this.#revertMap = Object.fromEntries(
-      Object.entries(config).map<[keyof H, keyof S]>(
-        ([key, value]: [keyof S, Required<TNeedsItem<T, H, S[keyof S]>>]) => [value.requestName, key],
-      ),
-    ) as unknown as { [K in keyof H]?: keyof S };
+      Object.entries(config)
+        .filter(([_, value]) => !!value)
+        .map<[keyof H, keyof L]>(([key, value]) => [value || 0, key]),
+    ) as unknown as { [K in keyof H]?: keyof L };
     this.#namedLogger = logger?.named(MODULE_NAME);
   }
 
