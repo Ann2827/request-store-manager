@@ -111,7 +111,10 @@ class RequestManager<
     ...args: Parameters<THttpsAdapter<T, S, RM>[Name][0]>
   ): Promise<{ response: Response; validData: THttpsAdapter<T, S, RM>[Name][1] | null; data: unknown }> {
     const { validData, fetchData, ...rest } = await this.#modules.https.namedRequest(name, ...args);
-    if (validData) this.#modules.conserve.save(name, validData, fetchData);
+    if (validData) {
+      this.#modules.conserve.save(name, validData, fetchData);
+      this.#modules.needs.updateStateByRequestName(name);
+    }
     return { validData, ...rest };
   }
 

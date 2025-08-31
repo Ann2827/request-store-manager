@@ -45,6 +45,8 @@ class Needs<
 {
   readonly #config: L;
 
+  readonly #revertMap: { [K in keyof H]?: keyof L };
+
   readonly #modules: TNeedsModules<T, H, S, N, C>;
 
   readonly #namedLogger?: NamedLogger;
@@ -54,6 +56,11 @@ class Needs<
     super({ initialState: store }, {}, { name: MODULE_NAME }, logger);
     this.#modules = modules;
     this.#config = { ...config };
+    this.#revertMap = Object.fromEntries(
+      Object.entries(config)
+        .filter(([_, value]) => !!value)
+        .map<[keyof H, keyof L]>(([key, value]) => [value || 0, key]),
+    ) as unknown as { [K in keyof H]?: keyof L };
     this.#namedLogger = logger?.named(MODULE_NAME);
   }
 
@@ -61,6 +68,14 @@ class Needs<
     Object.values(this.#modules).forEach((module) => module.restart()); // TODO: нужно ли это делать? При общем использовании и при частичном
     super.restart();
     this.#namedLogger?.restart();
+  }
+
+  public updateStateByRequestName(requestName: keyof H) {
+    const name = this.#revertMap[requestName];
+    if (!name) return;
+
+    const value = this.#modules.store.get(name);
+    super.set(name, () => !this.#modules.store.isEmpty(name, value));
   }
 
   public async action<Name extends keyof L = keyof L>(

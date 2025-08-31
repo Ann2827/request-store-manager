@@ -119,6 +119,18 @@ describe('RequestManager class:', () => {
               const { backlog, done } = Object.groupBy(validData.data, ({ type }) => type);
               return { backlog: backlog?.map(({ text }) => text) || [], done: done?.map(({ text }) => text) || [] };
             },
+            validation: (data): data is Store[RM['getTasks']['storeKey']] =>
+              !!data && typeof data === 'object' && 'backlog' in data && 'done' in data,
+            cache: { maxAge: 0, place: 'sessionStorage' },
+            empty: (value) => {
+              return value.backlog.length === 0 && value.done.length === 0;
+            },
+          },
+          afterRequest: ({ response, input }) => {
+            if (!response.ok) return;
+            requestManager
+              .getModule('notifications')
+              .send({ data: { text: 'Данные успешно получены.' }, type: 'success' });
           },
         },
         getZero: {
