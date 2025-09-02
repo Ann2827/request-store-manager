@@ -4,12 +4,13 @@ import { fillObject } from '@utils';
 import type { IModule, TStoreBase, TStoreConfig, TStoreEmptyFn, TStoreSettings, TStoreValidationFn } from '@types';
 
 import CacheStrict from './CacheStrict';
+import CacheCurrent from './CacheCurrent';
 
 export type TStateModules<C extends keyof Partial<TStoreBase>> = {
   /**
    * Если необходимо кэшировать часть данных, то небходимо указать ключи при инициализации класса кэша и передать его instance через модули.
    */
-  cache?: CacheStrict<C>;
+  cache?: CacheStrict<C> | CacheCurrent<C>;
 };
 
 export const MODULE_NAME = 'store';
