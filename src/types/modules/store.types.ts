@@ -17,6 +17,7 @@ export type TStoreConfig<S extends TStoreBase> = {
   validation?: {
     [K in keyof S]?: TStoreValidationFn<S[K]>;
   };
+  validationFull?: TStoreValidationFn<S>;
   /**
    * Какое значение считать пустым? Используется, как правило полученя кэша. Если значение пустое, то пробуем достать из кэша.
    * @default (value) => !value

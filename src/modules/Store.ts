@@ -10,7 +10,8 @@ export type TStateModules<C extends keyof Partial<TStoreBase>> = {
   /**
    * Если необходимо кэшировать часть данных, то небходимо указать ключи при инициализации класса кэша и передать его instance через модули.
    */
-  cache?: CacheStrict<C> | CacheCurrent<C>;
+  cache?: CacheStrict<C>;
+  cacheFull?: CacheCurrent<C>;
 };
 
 export const MODULE_NAME = 'store';
@@ -21,6 +22,7 @@ export const MODULE_NAME = 'store';
 class Store<S extends TStoreBase> extends Context<S> implements IModule {
   readonly #validation: { [K in keyof S]: TStoreValidationFn<S[K]> };
   // readonly #validation: Record<keyof S, TStoreValidationFn<S[keyof S]>>;
+  readonly #validationFull: TStoreValidationFn<S>;
 
   readonly #isEmpty: { [K in keyof S]: TStoreEmptyFn<S[K]> };
 
@@ -28,9 +30,17 @@ class Store<S extends TStoreBase> extends Context<S> implements IModule {
 
   readonly #namedLogger?: NamedLogger;
 
+  #restored: boolean = false;
+
   #validate<K extends keyof S>(fn: TStoreValidationFn<S[K]>, key: K, value: unknown): value is S[K] {
     const valid = fn?.(value) ?? true;
     if (!valid) this.#namedLogger?.error(`Validation state: ${key.toString()} not valid`);
+    return valid;
+  }
+
+  #validateFull(fn: TStoreValidationFn<S>, value: unknown): value is S {
+    const valid = fn?.(value) ?? true;
+    if (!valid) this.#namedLogger?.error(`Validation state: full not valid`);
     return valid;
   }
 
@@ -42,7 +52,7 @@ class Store<S extends TStoreBase> extends Context<S> implements IModule {
   ) {
     const filledValidation = fillObject<S, { [K in keyof S]: TStoreValidationFn<S[K]> }>(
       config.initialState,
-      (_, key) => config?.validation?.[key] || ((d: unknown, _r?: Response): d is S[typeof key] => true),
+      (_, key) => config.validation?.[key] || ((d: unknown, _r?: Response): d is S[typeof key] => true),
     );
     const filledEmpty = fillObject<S, { [K in keyof S]: TStoreEmptyFn<S[K]> }>(
       config.initialState,
@@ -59,9 +69,12 @@ class Store<S extends TStoreBase> extends Context<S> implements IModule {
     });
 
     this.#validation = filledValidation;
+    this.#validationFull = config?.validationFull || ((d: unknown, _r?: Response): d is S => true);
     this.#isEmpty = filledEmpty;
     this.#modules = { ...modules };
     this.#namedLogger = namedLogger;
+
+    this.getFull = this.getFull.bind(this);
   }
 
   public restart() {
@@ -83,6 +96,13 @@ class Store<S extends TStoreBase> extends Context<S> implements IModule {
     this.#modules.cache?.set(key.toString(), value);
   }
 
+  public setFull(fn: (prev: S) => S): void {
+    const value: S = fn(super.state);
+    if (!this.#validateFull(this.#validationFull, value)) return;
+    super.setState((prev) => ({ ...prev, ...value }));
+    this.#modules.cacheFull?.set(value);
+  }
+
   public isEmpty<K extends keyof S = keyof S>(key: K, value: S[K]): boolean {
     return this.#isEmpty[key](value);
   }
@@ -100,6 +120,23 @@ class Store<S extends TStoreBase> extends Context<S> implements IModule {
     }
 
     this.#modules.cache?.remove(key);
+    return value;
+  }
+
+  public getFull(): S {
+    const value = super.state;
+    if (!this.#restored) return value;
+
+    const cacheValue = this.#modules.cacheFull?.get();
+    if (cacheValue === undefined) return value;
+    if (this.#validateFull(this.#validationFull, cacheValue)) {
+      this.#namedLogger?.message(`full state restored from cache.`);
+      this.#restored = true;
+      this.setFull(() => cacheValue);
+      return cacheValue;
+    }
+
+    this.#modules.cacheFull?.remove();
     return value;
   }
 }
