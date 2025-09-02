@@ -11,3 +11,4 @@ export { default as Needs } from './Needs';
 export { default as Notifications } from './Notifications';
 export { default as Validation } from './Validation';
 export { default as Conserve } from './Conserve';
+export { default as CacheCurrent } from './CacheCurrent';

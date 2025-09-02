@@ -119,7 +119,7 @@ describe('RequestManager class:', () => {
               const { backlog, done } = Object.groupBy(validData.data, ({ type }) => type);
               return { backlog: backlog?.map(({ text }) => text) || [], done: done?.map(({ text }) => text) || [] };
             },
-            validation: (data): data is Store[RM['getTasks']['storeKey']] =>
+            validation: (data): data is TStore[RM['getTasks']['storeKey']] =>
               !!data && typeof data === 'object' && 'backlog' in data && 'done' in data,
             cache: { maxAge: 0, place: 'sessionStorage' },
             empty: (value) => {
