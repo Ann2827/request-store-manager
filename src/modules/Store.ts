@@ -125,7 +125,7 @@ class Store<S extends TStoreBase> extends Context<S> implements IModule {
 
   public getFull(): S {
     const value = super.state;
-    if (!this.#restored) return value;
+    if (this.#restored) return value;
 
     const cacheValue = this.#modules.cacheFull?.get();
     if (cacheValue === undefined) return value;
