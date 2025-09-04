@@ -29,6 +29,7 @@ describe('Store class:', () => {
   });
 
   beforeEach(() => {
+    globalThis.localStorage.clear();
     store.restart();
   });
 
@@ -68,6 +69,15 @@ describe('Store class:', () => {
     expect(store.state.array.backlog.length).toStrictEqual(4);
   });
 
+  test('restore from cacheCurrent', () => {
+    globalThis.localStorage.setItem(
+      'cache-name',
+      '{"expires":0,"value":{"tasks":{"backlog":["2"],"done":[]},"array":{"backlog":[],"done":[]}}}',
+    );
+    const state = store.getFull();
+    expect(state.tasks.backlog).toStrictEqual(['2']);
+  });
+
   test('setFull and getFull and cacheCurrent', async () => {
     store.setFull((prev) => ({ ...prev, tasks: { ...prev.tasks, backlog: ['1'] } }));
     const state = store.getFull();
@@ -77,14 +87,5 @@ describe('Store class:', () => {
     expect(globalThis.localStorage.getItem('cache-name')).toStrictEqual(
       '{"expires":0,"value":{"tasks":{"backlog":["1"],"done":[]},"array":{"backlog":[],"done":[]}}}',
     );
-  });
-
-  test('restore from cacheCurrent', async () => {
-    globalThis.localStorage.setItem(
-      'cache-name',
-      '{"expires":0,"value":{"tasks":{"backlog":["2"],"done":[]},"array":{"backlog":[],"done":[]}}}',
-    );
-    const state = store.getFull();
-    expect(state.tasks.backlog).toStrictEqual(['2']);
   });
 });

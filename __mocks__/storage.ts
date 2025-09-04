@@ -2,7 +2,7 @@ function createStorage() {
   const UNSET = Symbol();
   const noopCallback = (..._args: any) => {};
   let _itemInsertionCallback = noopCallback;
-  const s: Storage = {
+  const defaultS: Storage = {
     setItem: () => {},
     getItem: () => null,
     removeItem: () => {},
@@ -11,6 +11,7 @@ function createStorage() {
     key: () => null,
     itemInsertionCallback: () => {},
   };
+  let s: Storage = { ...defaultS };
 
   Object.defineProperty(s, 'setItem', {
     get: () => {
@@ -47,9 +48,10 @@ function createStorage() {
   Object.defineProperty(s, 'clear', {
     get: () => {
       return () => {
-        for (const k in s) {
-          delete s[String(k)];
-        }
+        s = { ...defaultS };
+        // for (const k in s) {
+        //   delete s[String(k)];
+        // }
       };
     },
   });
