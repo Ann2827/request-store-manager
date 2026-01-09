@@ -30,8 +30,8 @@ export type TConserveConfig<
   C extends TConserveBase<T, H, S>,
 > = {
   //   [K in Extract<keyof C, keyof H>]?: C[K] extends keyof S ? TConserveConfigItem<T, H, S, K, C[K]> : undefined;
-  [K in keyof C]?: C[Extract<keyof C, keyof H>] extends keyof S
-    ? TConserveConfigItem<T, H, S, Extract<keyof C, keyof H>, C[Extract<keyof C, keyof H>]>
+  [K in keyof C]?: C[Extract<K, keyof H>] extends keyof S
+    ? TConserveConfigItem<T, H, S, Extract<K, keyof H>, C[Extract<K, keyof H>]>
     : undefined;
   //   [K in keyof H]?: C[K] extends keyof S ? TConserveConfigItem<T, H, S, K, C[K]> : undefined;
   // Extract<keyof C, string>
