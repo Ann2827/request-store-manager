@@ -86,12 +86,15 @@ class Https<T extends TTokenNames, H extends THttpsBase<T>, N extends TNotificat
     if (authHeader) {
       headers.append(...authHeader);
     }
+
+    const format = fetchData.settings?.contentType ?? this.#settings.contentType;
+    const contentType = ResponseFactory.requestContentType(format);
+    if (contentType) headers.append('Content-Type', contentType);
+
     if (fetchData.body) {
-      const format = fetchData.settings?.contentType ?? this.#settings.contentType;
       body = ResponseFactory.stringify(fetchData.body, format);
-      const contentType = ResponseFactory.requestContentType(format);
-      if (contentType) headers.append('Content-Type', contentType);
     }
+
     if (fetchData.query) {
       Object.entries(convertQuery(fetchData.query)).forEach(([key, value]) => {
         input.searchParams.append(key, value);
