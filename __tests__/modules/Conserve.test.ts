@@ -7,12 +7,15 @@ import Conserve from '../../src/modules/Conserve';
 type TTokens = 'main';
 interface THttps extends THttpsBase<TTokens> {
   getTasks: [(quantity: number) => IHttpsRequest<TTokens>, { quantity: number }, any?];
+  getTest: [() => IHttpsRequest<TTokens>, boolean, any?];
 }
 type TStore = {
   tasks: { quantity: number };
+  test: boolean;
 };
 type TConserve = {
   getTasks: 'tasks';
+  getTest: 'test';
 };
 
 describe('Conserve class:', () => {
@@ -24,7 +27,7 @@ describe('Conserve class:', () => {
     restoreStorage = mockStorage();
 
     store = new Store<TStore>({
-      initialState: { tasks: { quantity: 0 } },
+      initialState: { tasks: { quantity: 0 }, test: false },
       isEmpty: { tasks: ({ quantity }) => !quantity },
     });
     conserve = new Conserve<TTokens, THttps, TStore, TConserve>(
@@ -32,6 +35,10 @@ describe('Conserve class:', () => {
         getTasks: {
           storeKey: 'tasks',
           converter: () => ({ quantity: 5 }),
+        },
+        getTest: {
+          storeKey: 'test',
+          converter: ({ validData }) => validData,
         },
       },
       { store },
