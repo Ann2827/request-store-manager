@@ -219,7 +219,7 @@ class Https<T extends TTokenNames, H extends THttpsBase<T>, N extends TNotificat
     );
     const data = await ResponseFactory.parse(response, fetchData.settings?.contentType ?? this.#settings.contentType);
 
-    const message = this.#modules.messages.parse(response);
+    const message = this.#modules.messages.parse(response, data);
     if (message && (fetchData.settings?.notifications ?? this.#settings.notifications))
       this.#modules.notifications.send({ data: message[0], type: message[1], response });
 
