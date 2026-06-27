@@ -26,4 +26,11 @@ describe('crc32:', () => {
     expect(crc32('1').length).toEqual(8);
     expect(crc32('my test string').length).toEqual(8);
   });
+
+  test('5', () => {
+    const args1 = [{ day: 100 }, 4];
+    const args2 = [{ day: 101 }, 4];
+    expect(crc32(args1.map((a) => JSON.stringify(a)).join(''))).toEqual('de111da2');
+    expect(crc32(args2.map((a) => JSON.stringify(a)).join(''))).toEqual('dfd37795');
+  });
 });
