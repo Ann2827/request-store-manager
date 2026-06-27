@@ -174,7 +174,7 @@ class Https<T extends TTokenNames, H extends THttpsBase<T>, N extends TNotificat
     name: Name,
     ...args: Parameters<H[Name][0]>
   ): Promise<THttpsAnswer<T, H, Name>> {
-    const stateKey = `${name.toString()}-${crc32([...args].join(''))}`;
+    const stateKey = `${name.toString()}-${crc32(args.map((a) => JSON.stringify(a)).join(''))}`;
 
     if (this.state[stateKey]?.status === 'pending') {
       super.setState((prev) => ({
