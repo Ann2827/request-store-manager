@@ -141,6 +141,8 @@ class Https<T extends TTokenNames, H extends THttpsBase<T>, N extends TNotificat
       contentType: settings?.contentType ?? 'json',
       loader: settings?.loader ?? false,
       notifications: settings?.notifications ?? false,
+      allowEmptyQuery: settings?.allowEmptyQuery,
+      allowQueryNull: settings?.allowQueryNull,
     };
     this.#modules = modules;
     this.#namedLogger = namedLogger;
