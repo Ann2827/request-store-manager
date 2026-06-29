@@ -96,7 +96,8 @@ class Https<T extends TTokenNames, H extends THttpsBase<T>, N extends TNotificat
     }
 
     if (fetchData.query) {
-      Object.entries(convertQuery(fetchData.query)).forEach(([key, value]) => {
+      const { allowEmptyQuery, allowQueryNull } = this.#settings;
+      Object.entries(convertQuery(fetchData.query, { allowEmptyQuery, allowQueryNull })).forEach(([key, value]) => {
         input.searchParams.append(key, value);
       });
     }

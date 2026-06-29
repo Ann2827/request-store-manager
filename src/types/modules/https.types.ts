@@ -4,6 +4,20 @@ import { TValidationTemplate } from './validation.types';
 
 import type { TTokenNames } from './token.types';
 
+export type TQuerySettings = {
+  /**
+   * Разрешает обрабатывать null в значении query. (Если выключено, то посчитает значение пустым)
+   * @example 'null' | 'none' => link/?text=null
+   * @default undefined
+   */
+  allowQueryNull?: string;
+  /**
+   * Разрешает передавать ключи с пустыми значениями в query.
+   * @example link/?text=,title=
+   * @default false
+   */
+  allowEmptyQuery?: boolean;
+};
 export type THttpsSettings = {
   /**
    * @default json
@@ -11,7 +25,7 @@ export type THttpsSettings = {
   contentType: TResponseFormat;
   loader: boolean;
   notifications: boolean;
-};
+} & TQuerySettings;
 export interface IHttpsRequest<T extends TTokenNames> {
   url: string | URL;
   method: RequestInit['method'];
