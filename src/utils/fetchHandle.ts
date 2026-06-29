@@ -1,12 +1,21 @@
+import { TQuerySettings } from '@types';
+
 import { isObject } from './guards';
 import { stringify } from './stringify';
 
-const getPairs = (obj: object): [string[], string][] => {
+const getPairs = (obj: object, settings: TQuerySettings): [string[], string][] => {
+  const { allowEmptyQuery, allowQueryNull } = settings;
   return Object.entries(obj).reduce<[string[], string][]>((prev, [key, value]) => {
-    if (value === null || value === undefined) return prev;
-
-    if (isObject(value)) {
-      getPairs(value).forEach(([keys, val]) => {
+    if (value === null && allowQueryNull) {
+      prev.push([[key], allowQueryNull]);
+    } else if (value === undefined || (value === null && !allowQueryNull)) {
+      if (allowEmptyQuery) {
+        prev.push([[key], '']);
+      } else {
+        return prev;
+      }
+    } else if (isObject(value)) {
+      getPairs(value, settings).forEach(([keys, val]) => {
         prev.push([[key, ...keys], val.toString()]);
       });
     } else {
@@ -17,6 +26,6 @@ const getPairs = (obj: object): [string[], string][] => {
   }, []);
 };
 const calculateKey = ([key0, ...keysRest]: string[]) => [key0, ...keysRest.map((a) => `[${a}]`)].join('');
-export const convertQuery = (object: object): Record<string, string> => {
-  return Object.fromEntries(getPairs(object).map(([keys, value]) => [calculateKey(keys), value]));
+export const convertQuery = (object: object, settings: TQuerySettings): Record<string, string> => {
+  return Object.fromEntries(getPairs(object, settings).map(([keys, value]) => [calculateKey(keys), value]));
 };
